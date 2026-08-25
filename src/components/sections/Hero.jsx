@@ -80,7 +80,7 @@ export default function Hero({ ready = true }) {
       </div>
       <div
         data-art
-        className="pointer-events-none absolute right-0 top-16 z-[6] block h-[34vh] w-[62vw] max-w-[440px] lg:right-0 lg:top-0 lg:z-0 lg:h-full lg:w-[30vw]"
+        className="pointer-events-none absolute -right-[50px]  top-16 z-[6] block h-[34vh] w-[62vw] max-w-[440px] lg:right-0 lg:top-0 lg:z-0 lg:h-full lg:w-[30vw]"
       >
         <SharedMedia
           src={HeroImageRight}

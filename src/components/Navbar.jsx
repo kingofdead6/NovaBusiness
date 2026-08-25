@@ -75,7 +75,7 @@ export default function Navbar() {
               href="#contact"
               variant="solid"
               strength={0.25}
-              className="!px-5 !py-2.5 !text-[11px]"
+              className="hidden !px-5 !py-2.5 !text-[11px] md:inline-flex"
             >
               parlons-en
             </MagneticButton>
