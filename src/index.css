@@ -1,0 +1,169 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --charbon: #1c1c1c;
+    --ivoire: #f5f0e8;
+    --bronze: #8a6045;
+    --dore: #c9a86a;
+    --pierre: #8c8780;
+    --blanc: #ffffff;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    scrollbar-color: var(--bronze) var(--ivoire);
+    scrollbar-width: thin;
+  }
+
+  html::-webkit-scrollbar {
+    width: 11px;
+  }
+
+  html::-webkit-scrollbar-track {
+    background: var(--ivoire);
+  }
+
+  html::-webkit-scrollbar-thumb {
+    border: 3px solid var(--ivoire);
+    border-radius: 999px;
+    background: var(--bronze);
+  }
+
+  html::-webkit-scrollbar-thumb:hover {
+    background: var(--dore);
+  }
+
+  body {
+    @apply bg-ivoire text-charbon font-sans antialiased;
+    overflow-x: hidden;
+  }
+
+  /* Lenis */
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+  .lenis.lenis-stopped {
+    overflow: hidden;
+  }
+
+  ::selection {
+    background: var(--bronze);
+    color: var(--blanc);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--bronze);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* the custom cursor replaces the native one on fine pointers only */
+  @media (hover: hover) and (pointer: fine) {
+    body.has-cursor,
+    body.has-cursor * {
+      cursor: none;
+    }
+  }
+}
+
+@layer components {
+  /* micro-label used above every section — mono, uppercase, tracked out */
+  .eyebrow {
+    @apply font-mono text-[11px] uppercase tracking-[0.22em] text-pierre;
+  }
+
+  .hairline {
+    @apply h-px w-full bg-charbon/10;
+  }
+
+  /* the ivory/charcoal "paper" grain that sits over the whole page */
+  .grain::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    pointer-events: none;
+    opacity: 0.16;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /*
+   * PIED DE PAGE — inversion clair → sombre.
+   *
+   * `--ink` (0 → 1) est écrit par le composant au fil du scroll. Toutes les
+   * couleurs en sont dérivées par `color-mix`, donc une seule valeur anime
+   * l'ensemble du bloc. On ne demande jamais à GSAP d'interpoler une couleur
+   * dans une custom property : il en est incapable, c'est ce qui cassait la
+   * bascule auparavant.
+   */
+  .footer-invert {
+    --ink: 0;
+    --f-fg: color-mix(in srgb, var(--ivoire) calc(var(--ink) * 100%), var(--charbon));
+    --f-accent: color-mix(in srgb, var(--dore) calc(var(--ink) * 100%), var(--bronze));
+    --f-muted: color-mix(in srgb, var(--f-fg) 62%, transparent);
+    --f-faint: color-mix(in srgb, var(--f-fg) 38%, transparent);
+    --f-line: color-mix(in srgb, var(--f-fg) 14%, transparent);
+    color: var(--f-fg);
+  }
+
+  @keyframes footer-accent-cycle {
+    0%,
+    100% {
+      color: var(--bronze);
+    }
+    50% {
+      color: var(--dore);
+    }
+  }
+
+  .footer-accent-cycle {
+    animation: footer-accent-cycle 5s ease-in-out infinite;
+  }
+
+  /* each letter/word wrapper produced by splitText() */
+  .split-line {
+    display: block;
+    overflow: hidden;
+  }
+  .split-inner {
+    display: block;
+    will-change: transform;
+  }
+}
+
+@layer utilities {
+  .edge {
+    @apply mx-auto w-full max-w-[1440px] px-5 md:px-10 xl:px-16;
+  }
+
+  .link-underline {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0% 1px;
+    background-repeat: no-repeat;
+    background-position: left bottom;
+    transition: background-size 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .link-underline:hover {
+    background-size: 100% 1px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
