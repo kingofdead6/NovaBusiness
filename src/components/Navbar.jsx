@@ -27,7 +27,7 @@ export default function Navbar() {
         animate={{ y: hidden ? -100 : 0, opacity: 1 }}
         transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
         style={{ x: "-50%" }}
-        className="fixed left-1/2 top-4 z-50 w-[calc(100%-2rem)] max-w-3xl md:top-6"
+        className="fixed left-1/2 top-4 z-50 w-[calc(100%-6rem)] max-w-2xl md:top-6 md:w-[calc(100%-2rem)]"
       >
         <div
           className={`relative flex items-center justify-between rounded-full py-2 pl-4 pr-2 transition-all duration-500 ease-nova md:pl-6 ${
