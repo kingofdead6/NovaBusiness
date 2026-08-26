@@ -6,201 +6,158 @@ import anime from "animejs/lib/anime.es.js";
 
 import { splitChars } from "../../lib/text";
 import LiquidVeil from "../LiquidVeil";
-import DriftArt from "../DriftArt";
-import flower from "../../assets/Takeover/flower.png";
 import building from "../../assets/Takeover/building.png";
+import flower from "../../assets/Takeover/flower.png";
+
 gsap.registerPlugin(ScrollTrigger);
 
 /**
  * SECTION 03 — RECOUVREMENT LIQUIDE
  *
- * Composition:
+ * Première moitié d'un diptyque : Takeover recouvre l'écran de matière
+ * charbon, Values EST cette matière une fois posée. La dernière couche du
+ * voile (#1C1C1C) est exactement `bg-charbon` : le raccord entre les deux
+ * sections est donc invisible, et ce qui commence ici se termine là-bas.
  *
- *                         nova.
+ * Composition — deux couches superposées dans le cadre sticky, qui se
+ * relaient au scroll :
  *
- *   Description
- *   anchored to
- *   the left side
+ *   ┌───────────────────────────────────────────┐      ┌──────────────────────┐
+ *   │  eyebrow                                  │      │  eyebrow             │
+ *   │                                           │  →   │  nova.      ← replié │
+ *   │                 nova.                     │      │ [img] description    │
+ *   └───────────────────────────────────────────┘      └──────────────────────┘
+ *        titre plein cadre                          il RESTE, en petit, au-dessus
  *
- *   [portrait]                         [portrait]
+ * DÉROULÉ (celui de la référence vidéo) :
  *
- * The portraits begin outside the viewport, arrive into
- * position, hold while the text is readable, then drift
- * back out (with a fade) as the section releases.
+ *   1. FOND CLAIR   — on entre sur `bg-ivoire`, le voile est encore hors cadre
+ *   2. COULÉE       — la matière monte et recouvre l'écran ; le titre se
+ *                     révèle dessus une fois la couverture faite
+ *   3. LE TITRE SE REPLIE — il se réduit et remonte se poser sous l'eyebrow,
+ *                     où il RESTE affiché jusqu'à la fin de la section
+ *   4. DESCRIPTION  — elle entre par la droite, et À SA HAUTEUR les deux
+ *                     visuels apparaissent aux bords gauche et droit
+ *
+ * Les visuels sont des PNG détourés, posés sans cadre ni fond. Ils ENTRENT EN
+ * PIVOTANT : le pivot est placé loin au-dessus d'eux, si bien que la rotation
+ * décrit un arc large qui les amène du hors-champ jusqu'à leur place. Leur
+ * ancrage CSS, lui, ne bouge jamais.
+ *
+ * C'est le voile — et lui seul — qui fait passer le fond du clair au sombre.
+ * La <section> reste donc `bg-ivoire` : c'est ce qu'on voit à l'entrée.
  */
 
-const REVEAL_START = 0.6;
-const REVEAL_END = 0.85;
+/* Fenêtre de progression du voile pendant laquelle le texte se révèle. */
+const REVEAL_START = 0.52;
+const REVEAL_END = 0.82;
 
 export default function Takeover() {
   const root = useRef(null);
   const textTimeline = useRef(null);
 
-  /**
-   * Synchronise the text animation with LiquidVeil.
-   */
+  /** Synchronise la timeline de texte sur la progression de LiquidVeil. */
   const updateText = useCallback((progress) => {
     const tl = textTimeline.current;
-
     if (!tl) return;
 
-    const t =
-      (progress - REVEAL_START) /
-      (REVEAL_END - REVEAL_START);
-
-    tl.seek(
-      tl.duration *
-        Math.min(
-          1,
-          Math.max(0, t)
-        )
-    );
+    const t = (progress - REVEAL_START) / (REVEAL_END - REVEAL_START);
+    tl.seek(tl.duration * Math.min(1, Math.max(0, t)));
   }, []);
 
   useEffect(() => {
-    if (!root.current) {
-      return undefined;
-    }
+    if (!root.current) return undefined;
 
     const ctx = gsap.context(() => {
-      const reduced = window.matchMedia(
-        "(prefers-reduced-motion: reduce)"
-      ).matches;
+      const q = (sel) => root.current.querySelector(sel);
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-      const word =
-        root.current.querySelector(
-          "[data-word]"
-        );
+      const word = q("[data-word]");
+      const sub = q("[data-sub]");
+      const eyebrow = q("[data-eyebrow]");
+      const rule = q("[data-rule]");
+      const titleLayer = q("[data-title-layer]");
+      const descLayer = q("[data-desc-layer]");
+      const leftArt = q("[data-art-left]");
+      const rightArt = q("[data-art-right]");
 
-      const sub =
-        root.current.querySelector(
-          "[data-sub]"
-        );
-
-      const leftImage =
-        root.current.querySelector(
-          "[data-drift-left]"
-        );
-
-      const rightImage =
-        root.current.querySelector(
-          "[data-drift-right]"
-        );
-
-      if (!word || !sub) {
-        return;
-      }
+      if (!word || !sub) return;
 
       const chars = splitChars(word);
 
-      /**
-       * ---------------------------------------------------------------
-       * INITIAL TEXT STATE
-       * ---------------------------------------------------------------
-       */
+      /* ------------------------------------------------------------------ */
+      /* ÉTAT INITIAL                                                        */
+      /* ------------------------------------------------------------------ */
 
       gsap.set(chars, {
         opacity: 0,
         yPercent: 70,
         rotate: 5,
-        transformOrigin:
-          "50% 100%",
+        transformOrigin: "50% 100%",
       });
+      gsap.set(sub, { opacity: 0, y: 30 });
+      if (rule) gsap.set(rule, { scaleX: 0, transformOrigin: "0% 50%" });
 
-      gsap.set(sub, {
-        opacity: 0,
-        y: 30,
-      });
-
-      /**
-       * ---------------------------------------------------------------
-       * INITIAL IMAGE STATE
-       * ---------------------------------------------------------------
+      /*
+       * La couche description part masquée : elle n'entre qu'une fois le titre
+       * sorti.
        *
-       * Both images start outside the viewport and invisible,
-       * so the entrance can fade them in rather than just
-       * sliding a fully-opaque image into frame.
+       * Les visuels PIVOTENT POUR ENTRER. Leur pivot est placé très haut
+       * au-dessus d'eux (`transformOrigin: 50% -140%`) : à cette distance, une
+       * rotation décrit un arc large, et c'est cet arc — pas une translation —
+       * qui les fait venir du hors-champ jusqu'à leur place. Le point d'ancrage
+       * reste rigoureusement fixe ; seule l'amplitude de départ change.
+       *
+       * L'amplitude est réduite sur téléphone : à largeur étroite, un arc de
+       * 38° projette l'image bien plus loin (le rayon est le même, mais l'écran
+       * est deux fois moins large), et elle disparaissait trop longtemps avant
+       * de revenir. 24° donne la même lecture sur un petit écran.
        */
+      const SWING = window.matchMedia("(max-width: 767px)").matches ? 24 : 38;
 
-      if (leftImage) {
-        gsap.set(leftImage, {
-          xPercent: -72,
-          yPercent: 8,
-          rotate: -18,
-          scale: 0.82,
-          opacity: 0,
-          transformOrigin:
-            "80% 50%",
-        });
+      /*
+       * La couche titre est ancrée en haut (`items-start`) mais démarre avec
+       * un grand retrait qui la place optiquement au CENTRE du cadre. C'est ce
+       * retrait que le relais rétracte : le mot remonte donc en se repliant,
+       * sans jamais quitter l'écran.
+       */
+      if (titleLayer) gsap.set(titleLayer, { paddingTop: "38vh" });
+
+      if (descLayer) gsap.set(descLayer, { opacity: 0 });
+      if (leftArt) {
+        gsap.set(leftArt, { opacity: 0, rotate: -SWING, transformOrigin: "50% -140%" });
+      }
+      if (rightArt) {
+        gsap.set(rightArt, { opacity: 0, rotate: SWING, transformOrigin: "50% -140%" });
       }
 
-      if (rightImage) {
-        gsap.set(rightImage, {
-          xPercent: 72,
-          yPercent: -5,
-          rotate: 18,
-          scale: 0.82,
-          opacity: 0,
-          transformOrigin:
-            "20% 50%",
-        });
-      }
-
-      /**
-       * ---------------------------------------------------------------
-       * REDUCED MOTION
-       * ---------------------------------------------------------------
-       */
+      /* ------------------------------------------------------------------ */
+      /* MOUVEMENT RÉDUIT — tout est posé, rien ne bouge                     */
+      /* ------------------------------------------------------------------ */
 
       if (reduced) {
-        gsap.set(chars, {
-          opacity: 1,
-          yPercent: 0,
-          rotate: 0,
+        gsap.set(chars, { opacity: 1, yPercent: 0, rotate: 0 });
+        gsap.set(sub, { opacity: 1, y: 0 });
+        if (rule) gsap.set(rule, { scaleX: 1 });
+        /*
+         * Sans mouvement, on affiche directement l'état final : le titre déjà
+         * replié en signature compacte, la description en place dessous.
+         */
+        if (titleLayer) gsap.set(titleLayer, { paddingTop: "7vh" });
+        gsap.set(word, { scale: 0.3 });
+        if (descLayer) gsap.set(descLayer, { opacity: 1 });
+        [leftArt, rightArt].forEach((el) => {
+          if (el) gsap.set(el, { rotate: 0, opacity: 1 });
         });
-
-        gsap.set(sub, {
-          opacity: 1,
-          y: 0,
-        });
-
-        if (leftImage) {
-          gsap.set(leftImage, {
-            xPercent: 0,
-            yPercent: 0,
-            rotate: 0,
-            scale: 1,
-            opacity: 1,
-          });
-        }
-
-        if (rightImage) {
-          gsap.set(rightImage, {
-            xPercent: 0,
-            yPercent: 0,
-            rotate: 0,
-            scale: 1,
-            opacity: 1,
-          });
-        }
-
         return;
       }
 
-      /**
-       * ---------------------------------------------------------------
-       * TEXT TIMELINE
-       * ---------------------------------------------------------------
-       */
+      /* ------------------------------------------------------------------ */
+      /* TEXTE — timeline anime.js pilotée par la progression du voile       */
+      /* ------------------------------------------------------------------ */
 
-      const timeline = anime.timeline({
-        autoplay: false,
-        easing: "easeOutExpo",
-      });
+      const timeline = anime.timeline({ autoplay: false, easing: "easeOutExpo" });
 
-      /**
-       * NOVA LETTER REVEAL
-       */
       timeline.add({
         targets: chars,
         opacity: [0, 1],
@@ -210,60 +167,50 @@ export default function Takeover() {
         delay: anime.stagger(55),
       });
 
-      /**
-       * DESCRIPTION REVEAL
-       */
-      timeline.add(
-        {
-          targets: sub,
-          opacity: [0, 1],
-          translateY: [30, 0],
-          duration: 850,
-        },
-        "-=600"
-      );
-
-      textTimeline.current =
-        timeline;
-
-      /**
-       * ---------------------------------------------------------------
-       * TITLE SCROLL MOVEMENT
-       * ---------------------------------------------------------------
+      /*
+       * NB : seul le TITRE est piloté par la coulée. La description ne fait
+       * plus partie de cette timeline — elle entre plus tard, une fois le
+       * titre sorti du cadre, et dépend donc du scroll et non de la
+       * progression du voile (voir « RELAIS » plus bas).
        */
 
-      gsap.to(word, {
-        scale: 1.045,
-        y: -10,
-        ease: "none",
+      textTimeline.current = timeline;
 
-        scrollTrigger: {
-          trigger: root.current,
-          start: "top top",
-          end: "bottom bottom",
-          scrub: true,
-        },
-      });
+      /* ------------------------------------------------------------------ */
+      /* EYEBROW — apparaît à l'entrée dans la section                       */
+      /* ------------------------------------------------------------------ */
 
-      /**
-       * ---------------------------------------------------------------
-       * PORTRAIT ENTRANCE + EXIT
-       * ---------------------------------------------------------------
+      if (eyebrow) {
+        gsap.fromTo(
+          eyebrow,
+          { opacity: 0, y: -14 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 1,
+            ease: "expo.out",
+            scrollTrigger: { trigger: root.current, start: "top 70%" },
+          }
+        );
+      }
+
+      /* ------------------------------------------------------------------ */
+      /* RELAIS — le titre sort, la description et les visuels prennent la    */
+      /* place                                                                */
+      /* ------------------------------------------------------------------ */
+      /*
+       * Une seule timeline scrubée sur toute la traversée de la section. Les
+       * positions sont des fractions de sa durée (0 → 1) et se lisent donc
+       * directement comme une progression de scroll :
        *
-       * A single scroll-scrubbed timeline spans the whole section
-       * (top top → bottom bottom, same window as the title). Each
-       * portrait gets three beats within it:
-       *
-       *   1. ENTER  — glides + rotates in from off-screen, fading up
-       *   2. HOLD   — sits still while the description is readable
-       *   3. EXIT   — continues its outward arc and dissolves away
-       *
-       * Positions below are fractions of the timeline's own total
-       * duration (treated as 0–1), so they map directly onto scroll
-       * progress through the section regardless of scrub smoothing.
+       *   0.00 → 0.62  la coulée monte, le titre se révèle dessus
+       *                (piloté par `updateText`, pas par cette timeline)
+       *   0.62 → 0.72  LE TITRE S'ÉLÈVE ET SORT par le haut
+       *   0.66 → 0.88  les visuels PIVOTENT depuis le hors-champ, texte entre
+       *   0.86 → 1.00  maintien : tout est lisible avant le passage à Values
        */
 
-      const portraitTimeline = gsap.timeline({
+      const relay = gsap.timeline({
         scrollTrigger: {
           trigger: root.current,
           start: "top top",
@@ -272,81 +219,78 @@ export default function Takeover() {
         },
       });
 
-      if (leftImage) {
-        portraitTimeline
-          .fromTo(
-            leftImage,
-            {
-              xPercent: -72,
-              yPercent: 8,
-              rotate: -18,
-              scale: 0.82,
-              opacity: 0,
-            },
-            {
-              xPercent: 0,
-              yPercent: 0,
-              rotate: 0,
-              scale: 1,
-              opacity: 1,
-              ease: "power2.out",
-              duration: 0.24,
-            },
-            0.04
-          )
-          // hold from ~0.28 to ~0.74 (implicit gap — nothing to tween)
-          .to(
-            leftImage,
-            {
-              xPercent: -46,
-              yPercent: -16,
-              rotate: -14,
-              scale: 0.86,
-              opacity: 0,
-              ease: "power2.in",
-              duration: 0.22,
-            },
-            0.76
-          );
+      /* le titre respire pendant que la coulée le recouvre */
+      relay.fromTo(
+        word,
+        { scale: 1, y: 0 },
+        { scale: 1.04, y: -18, ease: "none", duration: 0.62 },
+        0
+      );
+
+      /*
+       * ...puis IL SE REPLIE au lieu de partir.
+       *
+       * Deux tweens simultanés :
+       *  - le mot se réduit à ~28 % (origine en haut, donc il se ramasse vers
+       *    son propre bord supérieur) ;
+       *  - la couche remonte en rétractant son padding, de 38vh à 7vh.
+       *
+       * Résultat : « nova. » vient se poser en petit sous l'eyebrow et Y RESTE
+       * jusqu'à la fin de la section. Comme la timeline est scrubée, remonter
+       * le déplie exactement à l'envers — il grandit et retrouve le centre.
+       */
+      relay.to(
+        word,
+        { scale: 0.28, y: 0, ease: "power2.inOut", duration: 0.16 },
+        0.62
+      );
+
+      if (titleLayer) {
+        relay.to(
+          titleLayer,
+          { paddingTop: "7vh", ease: "power2.inOut", duration: 0.16 },
+          0.62
+        );
       }
 
-      if (rightImage) {
-        portraitTimeline
-          .fromTo(
-            rightImage,
-            {
-              xPercent: 72,
-              yPercent: -5,
-              rotate: 18,
-              scale: 0.82,
-              opacity: 0,
-            },
-            {
-              xPercent: 0,
-              yPercent: 0,
-              rotate: 0,
-              scale: 1,
-              opacity: 1,
-              ease: "power2.out",
-              duration: 0.24,
-            },
-            0.0
-          )
-          // hold from ~0.24 to ~0.78
-          .to(
-            rightImage,
-            {
-              xPercent: 52,
-              yPercent: -22,
-              rotate: 16,
-              scale: 0.86,
-              opacity: 0,
-              ease: "power2.in",
-              duration: 0.22,
-            },
-            0.78
-          );
+      /* la couche description devient active dès que le titre libère le cadre */
+      if (descLayer) {
+        relay.to(descLayer, { opacity: 1, duration: 0.02 }, 0.66);
       }
+
+      /*
+       * Les visuels ENTRENT EN PIVOTANT : ils partent à ~38° — donc bien
+       * au-delà des bords — et l'arc les amène jusqu'à leur position de repos.
+       * Le fondu accompagne le mouvement au lieu de le remplacer.
+       */
+      [
+        [leftArt, 0.66],
+        [rightArt, 0.68],
+      ].forEach(([el, at]) => {
+        if (!el) return;
+        relay.to(
+          el,
+          {
+            rotate: 0,
+            opacity: 1,
+            ease: "power3.out",
+            duration: 0.22,
+          },
+          at
+        );
+      });
+
+      /* le filet se trace, puis le paragraphe monte */
+      if (rule) {
+        relay.to(rule, { scaleX: 1, ease: "expo.out", duration: 0.12 }, 0.72);
+      }
+
+      relay.to(
+        sub,
+        { opacity: 1, y: 0, ease: "expo.out", duration: 0.14 },
+        0.76
+      );
+
     }, root);
 
     return () => {
@@ -360,204 +304,168 @@ export default function Takeover() {
       ref={root}
       id="studio"
       data-flock
-      className="
-        relative
-        h-[400vh]
-        bg-ivoire
-      "
+      className="relative h-[400vh] bg-ivoire"
       aria-label="Nova Business en un mot"
     >
-      <div
-        className="
-          sticky
-          top-0
-          h-screen
-          overflow-hidden
-        "
-      >
-        <LiquidVeil
-          onProgress={updateText}
-        />
+      {/* `h-stage` : 100vh avec repli 100svh — voir index.css */}
+      <div className="sticky top-0 h-stage overflow-hidden">
+        <LiquidVeil onProgress={updateText} />
 
-        {/* ============================================================= */}
-        {/* SIDE PORTRAITS                                                */}
-        {/* ============================================================= */}
+        {/*
+          COMPOSITION — deux couches indépendantes dans le cadre sticky.
 
-        <div
+          Elles se succèdent au scroll comme dans la référence : le TITRE
+          occupe l'écran une fois la coulée posée, puis s'élève et sort par le
+          haut ; la DESCRIPTION prend le relais, flanquée des deux visuels qui
+          arrivent EXACTEMENT à sa hauteur, en débord des bords gauche et
+          droit.
+
+          Deux couches superposées plutôt qu'une grille en colonne : chacune
+          est centrée sur le cadre pour son propre compte, donc la sortie de
+          l'une n'entraîne jamais l'autre.
+        */}
+
+        {/* ===================== EYEBROW ===================== */}
+
+        <p
+          data-eyebrow
           className="
-            pointer-events-none
-            absolute
-            inset-0
-            z-[5]
+            eyebrow absolute inset-x-0 top-0 z-20
+            px-5 text-center text-dore
+            pt-[calc(env(safe-area-inset-top)+4.5rem)]
+            md:px-10 md:pt-24 md:text-left
+            xl:px-16
           "
         >
-          {/* ----------------------------------------------------------- */}
-          {/* LEFT                                                         */}
-          {/* ----------------------------------------------------------- */}
+          Depuis 2019 — 40+ marques accompagnées
+        </p>
 
-          <div
-            data-drift-left
-            className="
-              absolute
-              -left-[180px]
-              top-[56%]
-              w-[360px]
+        {/* ====================== TITRE ====================== */}
+        {/*
+          Le titre NE DISPARAÎT PAS. Il occupe d'abord tout le cadre, puis se
+          replie vers le haut pour devenir une signature compacte qui reste
+          affichée pendant toute la suite de la section.
 
-              md:-left-[210px]
-              md:top-[53%]
-              md:w-[470px]
-
-              lg:-left-[230px]
-              lg:top-[50%]
-              lg:w-[540px]
-
-              will-change-transform
-            "
-          >
-            <DriftArt
-              src={building}
-              label="Visuel gauche — portrait éditorial"
-              ratio="3/4"
-              className="w-full"
-              scrollStart="60% top"
-              scrollEnd="85% top"
-              from={{
-                x: -70,
-                y: 90,
-                rotate: -18,
-                scale: 0.82,
-              }}
-            />
-          </div>
-
-          {/* ----------------------------------------------------------- */}
-          {/* RIGHT                                                        */}
-          {/* ----------------------------------------------------------- */}
-
-          <div
-            data-drift-right
-            className="
-              absolute
-              right-[2%]
-              top-[64%]
-              w-[350px]
-
-              md:right-[2%]
-              md:top-[61%]
-              md:w-[450px]
-
-              lg:right-[2%]
-              lg:top-[58%]
-              lg:w-[520px]
-
-              will-change-transform
-            "
-          >
-            <DriftArt
-              src={flower}
-              label="Visuel droit — portrait éditorial"
-              ratio="4/5"
-              className="w-full"
-              scrollStart="60% top"
-              scrollEnd="85% top"
-              from={{
-                x: 70,
-                y: 110,
-                rotate: 18,
-                scale: 0.82,
-              }}
-            />
-          </div>
-        </div>
-
-        {/* ============================================================= */}
-        {/* CENTRAL CONTENT                                                */}
-        {/* ============================================================= */}
+          Le pli est un simple `scale` : la couche est ancrée en haut
+          (`items-start` + un padding qui la descend au centre), et c'est GSAP
+          qui rétracte ce padding. Le mot se réduit donc VERS SON BORD
+          SUPÉRIEUR au lieu de fuir hors du cadre — rien ne sort, donc rien
+          n'a besoin de « revenir » à la remontée.
+        */}
 
         <div
-          className="
-            relative
-            z-10
-            flex
-            h-full
-            flex-col
-            items-end
-            justify-center
-            px-5
-          "
+          data-title-layer
+          className="pointer-events-none absolute inset-0 z-10 flex items-start justify-center px-5 will-change-transform"
         >
-          {/* EYEBROW */}
-
-          <p
-            className="
-              eyebrow
-              mb-8
-              text-right
-              text-dore
-            "
-          >
-            Depuis 2019 — 40+ marques accompagnées
-          </p>
-
-          {/* TITLE */}
-
           <h2
             data-word
             className="
-              text-giant
-              w-full
-              text-center
-              font-black
-              lowercase
-              leading-[0.82]
-              text-ivoire
-              mb-[200px]
+              origin-top text-center text-giant font-black lowercase
+              leading-[0.8] text-ivoire
+              [text-shadow:0_2px_60px_rgba(28,28,28,0.35)]
+              will-change-transform
             "
           >
             nova.
           </h2>
+        </div>
 
-          {/* ========================================================= */}
-          {/* LEFT-ALIGNED DESCRIPTION                                   */}
-          {/* ========================================================= */}
+        {/* ============= DESCRIPTION + VISUELS DE BORD ============= */}
+        {/*
+          Les deux visuels sont des PNG détourés : ils sont posés TELS QUELS,
+          sans cadre, sans fond, sans rognage ni dégradé. Leur ancrage est fixe
+          (`top-[34%]`) ; c'est la ROTATION, autour d'un pivot très haut placé,
+          qui les fait entrer depuis le hors-champ et se poser à cet endroit.
+        */}
 
-          <div
+        <div
+          data-desc-layer
+          className="absolute inset-0 z-10 flex items-center will-change-transform"
+        >
+          {/* -------------- VISUEL GAUCHE -------------- */}
+
+          <figure
+            data-art-left
+            aria-hidden="true"
             className="
-              mt-12
-              w-full
-              px-5
-
-              md:mt-16
-              md:px-10
-
-              lg:mt-20
-              lg:px-16
-
-              xl:px-20
+              pointer-events-none absolute origin-top will-change-transform
+              -left-[10%] top-[58%] w-[52vw] opacity-70
+              sm:-left-[6%] sm:w-[46vw]
+              md:left-0 md:top-[34%] md:w-[32vw] md:max-w-[300px] md:opacity-100
+              lg:max-w-[380px]
+              xl:max-w-[430px]
             "
           >
-            <p
-              data-sub
-              className="
-                ml-auto
-                max-w-[420px]
-                text-left
-                text-2xl
-                font-medium
-                leading-[1.6]
-                tracking-[-0.01em]
-                text-ivoire/75
+            <img
+              src={building}
+              alt=""
+              loading="lazy"
+              className="block w-full"
+            />
+          </figure>
 
-                md:max-w-[500px]
-                md:text-3xl
-                md:leading-[1.55]
-              "
-            >
-              Nous créons des expériences digitales où
-              design, technologie et stratégie se
-              rencontrent pour donner aux marques une
-              présence forte, distinctive et mémorable.
-            </p>
+          {/* -------------- VISUEL DROIT -------------- */}
+
+          <figure
+            data-art-right
+            aria-hidden="true"
+            className="
+              pointer-events-none absolute origin-top will-change-transform
+              -right-[8%] top-[68%] w-[46vw] opacity-70
+              sm:-right-[4%] sm:w-[42vw]
+              md:right-0 md:top-[34%] md:w-[28vw] md:max-w-[280px] md:opacity-100
+              lg:max-w-[340px]
+              xl:max-w-[390px]
+            "
+          >
+            <img
+              src={flower}
+              alt=""
+              loading="lazy"
+              className="block w-full"
+            />
+          </figure>
+
+          {/* ---------------- TEXTE ---------------- */}
+          {/*
+            Aligné à droite comme dans la référence, mais gardé à l'intérieur
+            de la gouttière pour ne jamais passer sous le visuel de droite.
+          */}
+
+          {/*
+            Le titre replié occupe désormais le haut du cadre en permanence :
+            la description est décalée vers le bas pour lui laisser la place au
+            lieu de passer dessous. Sur mobile le retrait est plus important —
+            le mot y est proportionnellement plus grand.
+          */}
+          <div
+            className="
+              relative z-10 w-full self-start px-6
+              pt-[calc(env(safe-area-inset-top)+13rem)]
+              md:ml-auto md:px-10 md:pt-[26vh]
+              xl:px-16
+            "
+          >
+            <div className="w-full max-w-[520px] md:ml-auto md:mr-[16vw] lg:mr-[18vw] xl:mr-[15vw]">
+              <span
+                data-rule
+                aria-hidden="true"
+                className="mb-5 block h-px w-full bg-dore/50 md:mb-6"
+              />
+              <p
+                data-sub
+                className="
+                  text-left text-[19px] font-medium leading-[1.5]
+                  tracking-[-0.01em] text-ivoire/80
+                  sm:text-xl
+                  md:text-2xl md:leading-[1.55] md:text-ivoire/75
+                "
+              >
+                Nous créons des expériences digitales où design, technologie et
+                stratégie se rencontrent pour donner aux marques une présence
+                forte, distinctive et mémorable.
+              </p>
+            </div>
           </div>
         </div>
       </div>

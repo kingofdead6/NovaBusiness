@@ -54,11 +54,17 @@ export default function Services() {
         Le `pt-[42vh]` réserve la hauteur qu'elle occupe, donc le titre n'est
         jamais masqué.
 
+        FENÊTRE : elle démarre à `top 92%` et non `top bottom`. Avec
+        `top bottom` la coulée s'animait dès que Services touchait le BAS du
+        viewport — soit pendant tout le dernier écran de Values, dont elle
+        recouvrait les cartes. Elle ne commence donc plus qu'une fois la
+        frontière atteinte, et Values garde ses animations pour elle.
+
         NB : pas d'`overflow-hidden` sur la <section> — il créerait un
         conteneur de défilement qui casserait le `position: sticky` des
         cartes. Le voile se découpe lui-même en interne.
       */}
-      <LiquidVeil flip reverse start="top bottom" end="top 15%" />
+      <LiquidVeil flip reverse start="top 92%" end="top 10%" />
 
       <div className="edge relative z-10">
         <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">

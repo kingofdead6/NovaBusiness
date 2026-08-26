@@ -115,6 +115,46 @@
     color: var(--f-fg);
   }
 
+  /*
+   * CADRE STICKY PLEIN ÉCRAN.
+   *
+   * `100vh` d'abord, `100svh` ensuite : sur mobile la barre d'URL qui se
+   * rétracte fait varier `vh` en cours de défilement, et le panneau sticky
+   * sautait à chaque changement. L'unité « small viewport » ne bouge pas.
+   *
+   * Deux déclarations dans la MÊME règle plutôt que deux classes Tailwind :
+   * `.h-[100svh]` est émis avant `.h-screen` dans la feuille, donc le repli
+   * l'aurait emporté sur le correctif. Ici l'ordre est garanti, et les
+   * navigateurs sans `svh` ignorent simplement la seconde ligne.
+   */
+  .h-stage {
+    height: 100vh;
+    height: 100svh;
+  }
+
+  /*
+   * CARTES « VALEURS » — l'encre se réchauffe au fil du scroll.
+   *
+   * `--card-ink` (0 → 1) est écrit par le composant pendant la traversée de
+   * chaque carte. Comme pour le pied de page, GSAP n'interpole JAMAIS une
+   * couleur : il ne fait varier qu'un nombre, et `color-mix` en dérive les
+   * teintes. C'est aussi ce qui laisse les états `:hover` reprendre la main —
+   * ils réassignent `color`, qui l'emporte sur la valeur héritée.
+   */
+  .card-ink {
+    --card-ink: 0;
+    --ci-title: color-mix(in srgb, var(--dore) calc(var(--card-ink) * 100%), var(--ivoire));
+    --ci-index: color-mix(in srgb, var(--bronze) calc(var(--card-ink) * 100%), var(--dore));
+  }
+
+  .card-ink-title {
+    color: var(--ci-title);
+  }
+
+  .card-ink-index {
+    color: var(--ci-index);
+  }
+
   @keyframes footer-accent-cycle {
     0%,
     100% {

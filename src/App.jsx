@@ -34,7 +34,7 @@ export default function App() {
 
   return (
     <SmoothScroll>
-      <div className="grain relative">
+      <div className="grain relative ">
         <Preloader onDone={() => setReady(true)} />
         <Cursor />
         <CursorFlock />
