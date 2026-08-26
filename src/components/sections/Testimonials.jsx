@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Media from "../Media";
+import useReveal from "../../hooks/useReveal";
+import WriteIn from "../WriteIn";
 import { testimonials } from "../../data/site";
 import testimonialspic from "../../assets/People/Testimonials.png"
 /**
@@ -10,6 +12,7 @@ import testimonialspic from "../../assets/People/Testimonials.png"
  * sections ivoire.
  */
 export default function Testimonials() {
+  const root = useReveal();
   const [i, setI] = useState(0);
   const [auto, setAuto] = useState(true);
 
@@ -22,9 +25,14 @@ export default function Testimonials() {
   const t = testimonials[i];
 
   return (
-    <section className="relative overflow-hidden bg-charbon py-24 text-ivoire md:py-32">
+    <section
+      ref={root}
+      className="relative overflow-hidden bg-charbon py-24 text-ivoire md:py-32"
+    >
       <div className="edge">
-        <span className="eyebrow mb-12 block text-dore">Ce qu'ils en disent</span>
+        <span data-reveal="fade" className="eyebrow mb-12 block text-dore">
+          Ce qu'ils en disent
+        </span>
 
         <div className="grid items-center gap-12 md:grid-cols-[0.4fr_1fr] md:gap-16">
           <div className="w-40 md:w-full md:max-w-[260px]">
@@ -51,16 +59,22 @@ export default function Testimonials() {
             <AnimatePresence mode="wait">
               <motion.blockquote
                 key={t.quote}
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -24 }}
-                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                /* simple fondu : le mouvement est porté par <WriteIn>,
+                   qui écrit la citation mot à mot à chaque rotation */
+                initial={{ opacity: 1 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, y: -18 }}
+                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
               >
                 <p className="text-balance font-display text-2xl leading-snug md:text-[2.4rem] md:leading-[1.15]">
-                  « {t.quote} »
+                  <WriteIn text={`« ${t.quote} »`} />
                 </p>
                 <footer className="mt-7 font-mono text-[11px] uppercase tracking-[0.18em] text-ivoire/50">
-                  {t.author} — {t.role}
+                  <WriteIn
+                    text={`${t.author} — ${t.role}`}
+                    stagger={0.02}
+                    delay={0.35}
+                  />
                 </footer>
               </motion.blockquote>
             </AnimatePresence>

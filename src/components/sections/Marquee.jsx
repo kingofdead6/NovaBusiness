@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
+import { initReveals } from "../../lib/reveal";
 
 /**
  * SECTION 07 — BANDEAU DÉFILANT
@@ -14,6 +15,8 @@ export default function Marquee() {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
+      initReveals(root.current);
+
       const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       if (reduced) return;
 
@@ -44,7 +47,7 @@ export default function Marquee() {
       className="relative overflow-hidden border-y border-charbon/10 bg-ivoire py-12 md:py-16"
       aria-label="Pour qui nous travaillons"
     >
-      <div className="flex flex-col gap-2">
+      <div data-reveal="fade" className="flex flex-col gap-2">
         <div data-row className="flex w-max items-center gap-8 whitespace-nowrap">
           {[...LINE_A, ...LINE_A, ...LINE_A].map((w, i) => (
             <span key={i} className="flex items-center gap-8">

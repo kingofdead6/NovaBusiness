@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import anime from "animejs/lib/anime.es.js";
+import { initReveals } from "../../lib/reveal";
+import TypedHeading from "../TypedHeading";
 import Media from "../Media";
 import ShardedMedia from "../SharedMedia";
 import people from "../../assets/People/people.jpg"
@@ -31,6 +33,8 @@ export default function Process() {
     if (!el) return;
 
     const ctx = gsap.context(() => {
+      initReveals(el);
+
       // barre de progression du déroulé
       gsap.fromTo(
         el.querySelector("[data-progress]"),
@@ -47,15 +51,6 @@ export default function Process() {
           },
         }
       );
-
-      gsap.from(el.querySelectorAll("[data-step]"), {
-        opacity: 0,
-        y: 40,
-        duration: 0.9,
-        ease: "expo.out",
-        stagger: 0.14,
-        scrollTrigger: { trigger: el.querySelector("[data-steps]"), start: "top 68%" },
-      });
 
       // compteurs — déclenchés une seule fois
       ScrollTrigger.create({
@@ -89,11 +84,15 @@ export default function Process() {
       <div className="edge">
         <div className="grid gap-14 lg:grid-cols-[1fr_0.85fr] lg:gap-20">
           <div>
-            <span className="eyebrow mb-6 block">Méthode</span>
-            <h2 className="text-d2 font-medium">
-              Huit semaines,{" "}
-              <span className="font-display italic text-bronze">sans surprise</span>
-            </h2>
+            <span data-reveal="fade" className="eyebrow mb-6 block">
+              Méthode
+            </span>
+            <TypedHeading
+              as="h2"
+              className="text-d2 font-medium"
+              text="Huit semaines, sans surprise"
+              html={'Huit semaines, <span class="font-display italic text-bronze">sans surprise</span>'}
+            />
 
             <div data-steps className="relative mt-14 pl-8">
               {/* rail + progression */}
@@ -111,11 +110,23 @@ export default function Process() {
                       className="absolute -left-8 top-2 h-2 w-2 -translate-x-1/2 rounded-full bg-bronze"
                       aria-hidden="true"
                     />
-                    <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-pierre">
+                    <span
+                      data-reveal="fade"
+                      className="block font-mono text-[11px] uppercase tracking-[0.18em] text-pierre"
+                    >
                       {s.week}
                     </span>
-                    <h3 className="mt-2 text-2xl font-bold tracking-tight">{s.title}</h3>
-                    <p className="mt-2 max-w-md text-[15px] leading-relaxed text-pierre">
+                    <TypedHeading
+                      as="h3"
+                      className="mt-2 text-2xl font-bold tracking-tight"
+                      text={s.title}
+                      speed={34}
+                    />
+                    <p
+                      data-reveal="fade"
+                      data-reveal-delay="0.1"
+                      className="mt-2 max-w-md text-[15px] leading-relaxed text-pierre"
+                    >
                       {s.body}
                     </p>
                   </li>
@@ -139,7 +150,12 @@ export default function Process() {
                     <span data-count={s.value}>0</span>
                     {s.suffix}
                   </p>
-                  <p className="mt-2 text-[12px] leading-snug text-pierre">{s.label}</p>
+                  <p
+                    data-reveal="fade"
+                    className="mt-2 text-[12px] leading-snug text-pierre"
+                  >
+                    {s.label}
+                  </p>
                 </div>
               ))}
             </div>

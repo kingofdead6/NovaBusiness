@@ -6,6 +6,8 @@ import {
   useTransform,
   useReducedMotion,
 } from "framer-motion";
+import useReveal from "../../hooks/useReveal";
+import TypedHeading from "../TypedHeading";
 import MagneticButton from "../MagneticButton";
 import Media from "../Media";
 import cta from "../../assets/People/cta.jpg";
@@ -17,6 +19,7 @@ import cta from "../../assets/People/cta.jpg";
  */
 export default function SplitCta() {
   const ref = useRef(null);
+  const revealRoot = useReveal();
   const reduce = useReducedMotion();
 
   // 0 = section arrive en bas de l'écran, 1 = section sort par le haut
@@ -42,17 +45,25 @@ export default function SplitCta() {
 
   return (
     <section ref={ref} className="overflow-hidden bg-ivoire py-6 md:py-10">
-      <div className="edge grid gap-4 md:grid-cols-2">
+      <div ref={revealRoot} className="edge grid gap-4 md:grid-cols-2">
         <motion.div
           style={leftStyle}
           className="flex min-h-[340px] flex-col justify-between rounded-[3px] bg-bronze p-8 text-blanc will-change-transform md:p-10"
         >
           <div>
-            <h2 className="text-d3 font-black leading-[0.95]">
-              Un projet en tête ?<br />
-              <span className="font-display font-normal italic">Dites-nous tout.</span>
-            </h2>
-            <p className="mt-5 max-w-sm text-[15px] leading-relaxed text-blanc/75">
+            <TypedHeading
+              as="h2"
+              className="text-d3 font-black leading-[0.95]"
+              text="Un projet en tête ? Dites-nous tout."
+              html={
+                'Un projet en tête ?<br /><span class="font-display font-normal italic">Dites-nous tout.</span>'
+              }
+            />
+            <p
+              data-reveal="fade"
+              data-reveal-delay="0.15"
+              className="mt-5 max-w-sm text-[15px] leading-relaxed text-blanc/75"
+            >
               Décrivez votre besoin en trois lignes. Réponse sous 24 h ouvrées,
               avec une première estimation de budget et de délai.
             </p>
@@ -72,13 +83,19 @@ export default function SplitCta() {
           </div>
 
           <div className="relative">
-            <h2 className="text-d3 font-black leading-[0.95]">
-              Pas encore prêt ?<br />
-              <span className="font-display font-normal italic text-bronze">
-                Prenez le book.
-              </span>
-            </h2>
-            <p className="mt-5 max-w-sm text-[15px] leading-relaxed text-pierre">
+            <TypedHeading
+              as="h2"
+              className="text-d3 font-black leading-[0.95]"
+              text="Pas encore prêt ? Prenez le book."
+              html={
+                'Pas encore prêt ?<br /><span class="font-display font-normal italic text-bronze">Prenez le book.</span>'
+              }
+            />
+            <p
+              data-reveal="fade"
+              data-reveal-delay="0.15"
+              className="mt-5 max-w-sm text-[15px] leading-relaxed text-pierre"
+            >
               12 projets détaillés, nos tarifs de départ et la liste des
               questions à se poser avant de lancer une refonte.
             </p>

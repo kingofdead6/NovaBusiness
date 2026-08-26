@@ -1,3 +1,4 @@
+import useReveal from "../../hooks/useReveal";
 import { clients } from "../../data/site";
 
 /**
@@ -8,10 +9,13 @@ import { clients } from "../../data/site";
  */
 export default function Clients() {
   const row = [...clients, ...clients];
+  const root = useReveal();
 
   return (
-    <section className="relative border-y border-charbon/10 py-8">
-      <p className="eyebrow mb-6 text-center">Ils nous font confiance</p>
+    <section ref={root} className="relative border-y border-charbon/10 py-8">
+      <p data-reveal="fade" className="eyebrow mb-6 text-center">
+        Ils nous font confiance
+      </p>
 
       <div className="relative overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_12%,#000_88%,transparent)]">
         <div className="flex w-max animate-marquee items-center gap-14 md:gap-20">

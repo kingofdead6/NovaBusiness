@@ -9,28 +9,60 @@ export function splitWords(el) {
     return el ? Array.from(el.querySelectorAll(".split-inner")) : [];
   }
 
-  const source = el.textContent.trim();
+  el.setAttribute("aria-label", el.textContent.trim());
   el.dataset.split = "true";
-  el.setAttribute("aria-label", source);
+
+  /**
+   * On descend dans l'arbre plutôt que de lire `textContent` : les titres
+   * contiennent souvent un <span class="italic text-bronze"> qu'il faut
+   * conserver. Chaque nœud texte est remplacé par ses mots masqués, et les
+   * éléments sont recréés à l'identique autour de leur contenu découpé.
+   */
+  const walk = (node) => {
+    const out = [];
+
+    Array.from(node.childNodes).forEach((child) => {
+      if (child.nodeType === Node.TEXT_NODE) {
+        const text = child.textContent;
+        if (!text.trim()) {
+          // on garde les espaces significatifs entre deux éléments
+          if (text.length) out.push(document.createTextNode(" "));
+          return;
+        }
+
+        text.trim().split(/\s+/).forEach((word, i, arr) => {
+          const outer = document.createElement("span");
+          outer.className = "split-line";
+          outer.setAttribute("aria-hidden", "true");
+
+          const inner = document.createElement("span");
+          inner.className = "split-inner";
+          inner.textContent = word;
+
+          outer.appendChild(inner);
+          out.push(outer);
+          if (i < arr.length - 1) out.push(document.createTextNode(" "));
+        });
+
+        // espace de bord conservé (ex. "Quatre métiers, " + <span>)
+        if (/\s$/.test(text)) out.push(document.createTextNode(" "));
+        return;
+      }
+
+      if (child.nodeType === Node.ELEMENT_NODE) {
+        const clone = child.cloneNode(false);
+        clone.setAttribute("aria-hidden", "true");
+        walk(child).forEach((n) => clone.appendChild(n));
+        out.push(clone);
+      }
+    });
+
+    return out;
+  };
+
+  const parts = walk(el);
   el.innerHTML = "";
-
-  source.split(/\s+/).forEach((word, i) => {
-    const outer = document.createElement("span");
-    outer.className = "split-line";
-    outer.style.display = "inline-block";
-    outer.setAttribute("aria-hidden", "true");
-
-    const inner = document.createElement("span");
-    inner.className = "split-inner";
-    inner.textContent = word;
-
-    outer.appendChild(inner);
-    el.appendChild(outer);
-
-    if (i < source.split(/\s+/).length - 1) {
-      el.appendChild(document.createTextNode(" "));
-    }
-  });
+  parts.forEach((n) => el.appendChild(n));
 
   return Array.from(el.querySelectorAll(".split-inner"));
 }

@@ -269,8 +269,39 @@ export default function Values() {
       {/* RACCORD — la matière déposée par Takeover finit de se stabiliser  */}
       {/* ================================================================ */}
 
-      
+      {/*
+        VISUELS FLOTTANTS — deux portraits en arrière-plan, à gauche et à
+        droite. Réservés au grand écran (`lg:block`) : en dessous, la place
+        manque et ils viendraient chevaucher les cartes.
 
+        `pointer-events-none` + `aria-hidden` : purement décoratifs, ils ne
+        doivent ni capter la souris ni être annoncés par un lecteur d'écran.
+      */}
+      <div
+        data-float="1"
+        aria-hidden="true"
+        className="pointer-events-none absolute -left-10 top-16 hidden w-[220px] opacity-30 lg:block"
+      >
+        <img
+          src={value1}
+          alt=""
+          loading="lazy"
+          className="aspect-[3/4] w-full rounded-[3px] object-cover"
+        />
+      </div>
+
+      <div
+        data-float="-1"
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-6 bottom-10 hidden w-[260px] opacity-30 lg:block"
+      >
+        <img
+          src={value2}
+          alt=""
+          loading="lazy"
+          className="aspect-[4/5] w-full rounded-[3px] object-cover"
+        />
+      </div>
 
       <div className="edge relative z-10">
         {/* ============================================================== */}

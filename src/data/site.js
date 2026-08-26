@@ -2,11 +2,11 @@ import service1 from "../assets/Services/service1.jpg";
 import service2 from "../assets/Services/service2.jpg";
 import service3 from "../assets/Services/service3.jpg";
 import service4 from "../assets/Services/service4.jpg";
-import bsustain from "../assets/Works/bsustain.png";
-import gimmi from "../assets/Works/gimmi.png";
-import invariant from "../assets/Works/invariant.png";
-import marrakech from "../assets/Works/marrakech.png";
-import spotgov from "../assets/Works/spotgov.png";
+import bsustain from "../assets/Works/pic1.png";
+import gimmi from "../assets/Works/pic2.png";
+import invariant from "../assets/Works/pic3.png";
+import marrakech from "../assets/Works/pic4.png";
+import spotgov from "../assets/Works/pic5.png";
 import lesson1 from "../assets/Lessons/lesson1.jpg";
 import lesson2 from "../assets/Lessons/lesson2.jpg";
 import lesson3 from "../assets/Lessons/lesson3.jpg";
@@ -84,14 +84,14 @@ export const values = [
 
 export const projects = [
   {
-    name: "Bsustain",
+    name: "EduCenter",
     kind: "Identité + e-commerce",
     year: "2025",
     mediaLabel: "Projet 1 — visuel principal, format paysage 16/10",
     img: bsustain,
   },
   {
-    name: "Gimmi",
+    name: "BarberTools",
     kind: "Site vitrine",
     year: "2025",
     mediaLabel: "Projet 2 — visuel principal, format paysage 16/10",
@@ -105,14 +105,14 @@ export const projects = [
     img: invariant,
   },
   {
-    name: "Marrakech",
+    name: "Evora",
     kind: "Refonte + SEO",
     year: "2024",
     mediaLabel: "Projet 4 — visuel principal, format paysage 16/10",
     img: marrakech,
   },
   {
-    name: "Spotgov",
+    name: "NexusAI",
     kind: "Application web",
     year: "2024",
     mediaLabel: "Projet 5 — visuel principal, format paysage 16/10",

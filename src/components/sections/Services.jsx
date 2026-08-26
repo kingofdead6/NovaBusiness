@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import Media from "../Media";
 import LiquidVeil from "../LiquidVeil";
+import { initReveals } from "../../lib/reveal";
+import TypedHeading from "../TypedHeading";
 import { services } from "../../data/site";
 
 /**
@@ -15,6 +17,8 @@ export default function Services() {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
+      initReveals(root.current);
+
       const cards = gsap.utils.toArray("[data-service]");
 
       cards.forEach((card, i) => {
@@ -69,13 +73,21 @@ export default function Services() {
       <div className="edge relative z-10">
         <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div className="max-w-xl">
-            <span className="eyebrow mb-6 block">Services</span>
-            <h2 className="text-d2 font-medium">
-              Quatre métiers,{" "}
-              <span className="font-display italic text-bronze">une seule équipe</span>
-            </h2>
+            <span data-reveal="fade" className="eyebrow mb-6 block">
+              Services
+            </span>
+            <TypedHeading
+              as="h2"
+              className="text-d2 font-medium"
+              text="Quatre métiers, une seule équipe"
+              html={'Quatre métiers, <span class="font-display italic text-bronze">une seule équipe</span>'}
+            />
           </div>
-          <p className="max-w-xs text-[15px] leading-relaxed text-pierre">
+          <p
+            data-reveal="fade"
+            data-reveal-delay="0.15"
+            className="max-w-xs text-[15px] leading-relaxed text-pierre"
+          >
             Vous pouvez tout nous confier ou piocher. On travaille aussi en
             renfort d'une équipe interne.
           </p>
@@ -97,8 +109,18 @@ export default function Services() {
                 </div>
 
                 <div>
-                  <h3 className="text-d3 font-bold tracking-tight">{s.title}</h3>
-                  <p className="mt-4 max-w-sm text-[15px] leading-relaxed text-pierre">
+                  <TypedHeading
+                    as="h3"
+                    className="text-d3 font-bold tracking-tight"
+                    text={s.title}
+                    speed={34}
+                  />
+                  <p
+                    data-reveal="fade"
+                    data-reveal-delay="0.1"
+                    data-reveal-start="top 70%"
+                    className="mt-4 max-w-sm text-[15px] leading-relaxed text-pierre"
+                  >
                     {s.lede}
                   </p>
 

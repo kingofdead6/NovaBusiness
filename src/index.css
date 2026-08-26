@@ -171,12 +171,72 @@
 
   /* each letter/word wrapper produced by splitText() */
   .split-line {
-    display: block;
+    display: inline-block;
     overflow: hidden;
+    vertical-align: bottom;
   }
   .split-inner {
     display: block;
     will-change: transform;
+  }
+
+  /*
+    Anti-flash : un bloc [data-reveal] est masqué tant que GSAP n'a pas pris
+    la main (`initReveals` retire l'attribut une fois le ScrollTrigger posé).
+    Sans ça, le texte s'affiche une frame en clair avant de sauter en place.
+  */
+  [data-reveal-pending="true"] {
+    visibility: hidden;
+  }
+
+  /* ---- Titres tapés à la machine (typed.js) ---------------------------- */
+  /*
+    Le « fantôme » occupe la place du titre complet dès le départ : la mise en
+    page ne bouge donc pas d'un pixel pendant la frappe. Il reste dans le flux
+    (et lisible par les lecteurs d'écran) mais transparent ; le texte visible
+    est écrit par typed.js dans .typed-live, superposé par-dessus.
+  */
+  /*
+    Le titre garde sa boîte pendant la frappe SANS superposition : le fantôme
+    est réduit à une hauteur nulle (il ne sert qu'à réserver la largeur des
+    retours à la ligne), et le texte tapé reste dans le flux normal — c'est
+    indispensable car typed.js insère son curseur en SIBLING du texte : dans
+    une boîte en `position: absolute`, il dérivait en bout de ligne.
+  */
+  .typed-slot {
+    display: block;
+  }
+
+  .typed-ghost {
+    display: block;
+    height: 0;
+    overflow: hidden;
+    visibility: hidden;
+  }
+
+  .typed-live {
+    display: inline;
+  }
+
+  /* frappe terminée : le curseur clignotant disparaît */
+  .typed-slot[data-typed-state="done"] .typed-cursor {
+    display: none;
+  }
+
+  .typed-cursor {
+    font-weight: 300;
+    opacity: 1;
+    animation: typed-blink 1s infinite;
+  }
+
+  @keyframes typed-blink {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
   }
 }
 

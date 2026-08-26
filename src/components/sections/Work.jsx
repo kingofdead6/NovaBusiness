@@ -1,5 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import useReveal from "../../hooks/useReveal";
+import TypedHeading from "../TypedHeading";
 import Media from "../Media";
 import MagneticButton from "../MagneticButton";
 import { projects } from "../../data/site";
@@ -48,6 +50,8 @@ export default function Work() {
     [total]
   );
 
+  const revealRoot = useReveal();
+
   const goToIndex = useCallback((i) => {
     instantRef.current = true;
     setActive(i);
@@ -87,6 +91,7 @@ export default function Work() {
 
   return (
     <section
+      ref={revealRoot}
       id="realisations"
       aria-roledescription="carrousel"
       aria-label="Réalisations récentes"
@@ -95,10 +100,15 @@ export default function Work() {
       <div className="edge">
         <div className="mb-12 flex items-end justify-between gap-6">
           <div>
-            <span className="eyebrow mb-6 block">Réalisations</span>
-            <h2 className="text-d2 font-medium lowercase">
-              travaux <span className="font-display italic text-bronze">récents</span>
-            </h2>
+            <span data-reveal="fade" className="eyebrow mb-6 block">
+              Réalisations
+            </span>
+            <TypedHeading
+              as="h2"
+              className="text-d2 font-medium lowercase"
+              text="travaux récents"
+              html={'travaux <span class="font-display italic text-bronze">récents</span>'}
+            />
           </div>
           <MagneticButton href="#contact" variant="ghost" className="hidden md:inline-flex">
             tous les projets
