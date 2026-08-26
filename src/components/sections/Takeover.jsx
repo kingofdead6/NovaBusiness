@@ -6,8 +6,8 @@ import anime from "animejs/lib/anime.es.js";
 
 import { splitChars } from "../../lib/text";
 import LiquidVeil from "../LiquidVeil";
-import building from "../../assets/Takeover/building.png";
-import flower from "../../assets/Takeover/flower.png";
+import building from "../../assets/takeover/building.png";
+import flower from "../../assets/takeover/flower.png";
 
 gsap.registerPlugin(ScrollTrigger);
 
