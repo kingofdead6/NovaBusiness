@@ -2,6 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  Déclaré HORS de tout `@layer` : `@property` est une règle de premier
+  niveau, un navigateur la rejette si elle est imbriquée dans une couche.
+  Sans elle `--f-mix` reste une chaîne non interpolable et la bascule de
+  couleur se ferait par à-coups au lieu de fondre.
+*/
+@property --f-mix {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}
+
+@property --f-inv {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
 @layer base {
   :root {
     --charbon: #1c1c1c;
@@ -227,6 +245,73 @@
   }
 }
 
+@layer components {
+  /* ==================================================================== */
+  /* MENU PLEIN ÉCRAN (ordinateur)                                        */
+  /* ==================================================================== */
+
+  /*
+    Chaque ligne fait rouler son libellé au survol : l'exemplaire du haut
+    s'échappe vers le haut pendant que le doré, posé juste en dessous, prend
+    sa place. Les deux exemplaires partagent la même boîte (`.menu-label`,
+    en `overflow: hidden`), si bien que rien ne dépasse pendant le roulement.
+
+    `translateY(100%)` sur l'exemplaire du bas plutôt qu'un décalage en `em` :
+    la hauteur suit la taille de police fluide (`text-d3`) sans réglage par
+    point de rupture.
+  */
+  .menu-label-top,
+  .menu-label-bottom {
+    transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .menu-label-bottom {
+    transform: translateY(100%);
+  }
+
+  .menu-row:hover .menu-label-top,
+  .menu-row:focus-visible .menu-label-top {
+    transform: translateY(-100%);
+  }
+
+  .menu-row:hover .menu-label-bottom,
+  .menu-row:focus-visible .menu-label-bottom {
+    transform: translateY(0);
+  }
+
+  /* la flèche part en diagonale et s'éclaire, en écho au roulement */
+  .menu-arrow {
+    opacity: 0;
+    transform: translate3d(-12px, 8px, 0);
+    transition:
+      opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+      color 0.45s ease;
+  }
+
+  .menu-row:hover .menu-arrow,
+  .menu-row:focus-visible .menu-arrow {
+    opacity: 1;
+    color: var(--dore);
+    transform: translate3d(0, 0, 0);
+  }
+
+  /*
+    Le survol d'une ligne estompe les autres : la cible visée se détache,
+    l'œil n'a plus à balayer toute la liste. `:has()` porte l'effet sur le
+    conteneur — impossible autrement de styler les FRÈRES non survolés.
+    Les navigateurs sans `:has()` affichent simplement la liste sans
+    atténuation, ce qui reste parfaitement lisible.
+  */
+  .menu-row {
+    transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  nav:has(.menu-row:hover) .menu-row:not(:hover) {
+    opacity: 0.35;
+  }
+}
+
 @layer utilities {
   .edge {
     @apply mx-auto w-full max-w-[1440px] px-5 md:px-10 xl:px-16;
@@ -252,5 +337,435 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* ====================================================================== */
+/* PIED DE PAGE — COUCHE D'ANIMATION                                      */
+/* ====================================================================== */
+/*
+  Tout est ADDITIF : aucune règle ici ne change une couleur, une taille ou
+  une position au repos. Le pied de page rendu sans JavaScript et sans
+  survol est exactement celui d'avant — ces déclarations n'ajoutent que du
+  mouvement par-dessus.
+*/
+@layer components {
+  /*
+    AURORE. Deux voiles doré/ivoire tournent lentement derrière le contenu.
+    `bg-bronze` reste la couleur de fond réelle du <footer> : ces voiles sont
+    des pseudo-éléments très peu opaques posés PAR-DESSUS, donc la teinte de
+    base ne bouge jamais si l'animation ne tourne pas.
+
+    z-index 0 sur ::before et `position: relative; z-index: 1` sur les
+    enfants directs : sans quoi les voiles couvriraient les liens et
+    intercepteraient les clics.
+  */
+  /*
+    INVERSION À L'ENTRÉE.
+    ---------------------------------------------------------------------
+    Le pied de page arrive en négatif (fond ivoire, encre bronze) puis
+    bascule vers ses couleurs définitives pendant qu'il monte à l'écran.
+
+    Deux variables seulement — `--f-bg` (fond) et `--f-ink` (encre) — et
+    TOUT le bloc s'y réfère : l'inversion se joue donc en interpolant deux
+    valeurs, sans dupliquer une seule règle.
+
+    `@property` déclare `--f-mix` comme un vrai nombre : sans cette
+    déclaration une variable personnalisée est une simple chaîne, que ni
+    GSAP ni le navigateur ne savent interpoler — la bascule se ferait d'un
+    coup au lieu de fondre. Les navigateurs qui l'ignorent gardent la
+    valeur finale posée plus bas (repli : couleurs normales, pas
+    d'inversion).
+  */
+  .footer-invert {
+    --f-mix: 1;
+    --f-bg: color-mix(in oklab, var(--ivoire) calc((1 - var(--f-mix)) * 100%), var(--bronze));
+    --f-ink: color-mix(in oklab, var(--bronze) calc((1 - var(--f-mix)) * 100%), var(--ivoire));
+    background-color: var(--f-bg);
+    color: var(--f-ink);
+  }
+
+  /*
+    Le logo est un JPEG à fond ivoire : pendant la phase inversée il se
+    fondrait dans un fond lui aussi ivoire. On l'inverse à l'identique, en
+    suivant la même variable, puis il revient au naturel.
+  */
+  .footer-invert .footer-logo img {
+    filter: invert(var(--f-inv, 0));
+  }
+
+  .footer-aurora::before {
+    content: "";
+    position: absolute;
+    inset: -40%;
+    z-index: 0;
+    pointer-events: none;
+    /*
+      Les voiles s'estompent tant que le pied de page est en négatif
+      (`opacity: var(--f-mix)`) : sur fond ivoire ils formeraient des taches
+      sales au lieu d'une aurore.
+    */
+    opacity: var(--f-mix);
+    background:
+      radial-gradient(38% 44% at 18% 22%, rgba(201, 168, 106, 0.42), transparent 62%),
+      radial-gradient(32% 40% at 82% 30%, rgba(245, 240, 232, 0.20), transparent 60%),
+      radial-gradient(46% 50% at 50% 92%, rgba(201, 168, 106, 0.28), transparent 66%);
+    filter: blur(14px);
+    animation: footer-aurora 22s ease-in-out infinite alternate;
+  }
+
+  /*
+    Grille de lumière qui remonte : donne une profondeur « scène » sans
+    dessiner de trait net. `mask-image` l'estompe vers le haut pour qu'elle
+    ne concurrence jamais le nom géant.
+  */
+  .footer-aurora::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: calc(0.5 * var(--f-mix));
+    background-image:
+      repeating-linear-gradient(90deg, rgba(245, 240, 232, 0.055) 0 1px, transparent 1px 84px);
+    -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 55%);
+    mask-image: linear-gradient(to top, #000 0%, transparent 55%);
+    animation: footer-grid 14s linear infinite;
+  }
+
+  .footer-aurora > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  @keyframes footer-aurora {
+    0% {
+      transform: translate3d(-4%, -3%, 0) scale(1) rotate(0deg);
+      filter: blur(14px) hue-rotate(0deg);
+    }
+    50% {
+      transform: translate3d(5%, 4%, 0) scale(1.14) rotate(4deg);
+      filter: blur(22px) hue-rotate(-12deg);
+    }
+    100% {
+      transform: translate3d(-2%, 6%, 0) scale(1.06) rotate(-3deg);
+      filter: blur(16px) hue-rotate(8deg);
+    }
+  }
+
+  @keyframes footer-grid {
+    to {
+      background-position: 84px 0;
+    }
+  }
+
+  /*
+    NOM GÉANT. Un dégradé doré balaie les lettres en continu.
+
+    Le dégradé est porté par CHAQUE lettre et non par le <h2> : `splitChars`
+    a fait de chaque caractère un `inline-block`, et un fond posé sur le
+    conteneur serait recadré lettre par lettre — le balayage sauterait au
+    lieu de glisser. Avec `background-attachment: fixed` chaque span
+    échantillonne le MÊME dégradé ancré au viewport : les lettres restent
+    donc parfaitement raccordées entre elles.
+
+    La couleur de repli (`color: var(--ivoire)`, héritée) reste en place :
+    un navigateur sans clip texte affiche le nom exactement comme avant.
+  */
+  .footer-wordmark .char {
+    /*
+      Les butées neutres pointent vers `--f-ink` et non l'ivoire fixe : le
+      nom suit ainsi l'inversion, tandis que le cœur doré du balayage reste
+      identique dans les deux états.
+    */
+    background-image: linear-gradient(
+      100deg,
+      var(--f-ink) 0%,
+      var(--f-ink) 34%,
+      #f6e2bd 44%,
+      var(--dore) 50%,
+      #f6e2bd 56%,
+      var(--f-ink) 66%,
+      var(--f-ink) 100%
+    );
+    background-attachment: fixed;
+    background-size: 260% 100%;
+    background-position: 130% 0;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: footer-sheen 7s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  }
+
+  /*
+    La transparence n'est posée QUE lorsque le clip texte est réellement
+    supporté : sinon le nom disparaîtrait purement et simplement.
+  */
+  @supports (-webkit-background-clip: text) or (background-clip: text) {
+    .footer-wordmark .char {
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+    }
+  }
+
+  @keyframes footer-sheen {
+    0%,
+    12% {
+      background-position: 130% 0;
+    }
+    88%,
+    100% {
+      background-position: -30% 0;
+    }
+  }
+
+  /*
+    Chaque lettre réagit au survol : elle se soulève et projette une lueur.
+    Le halo est peint par `drop-shadow` et non `text-shadow` : le remplissage
+    du texte étant transparent (clip du dégradé), une ombre de texte n'aurait
+    rien à dessiner. Le filtre, lui, opère sur le rendu FINAL de la lettre.
+
+    `transform` est laissé à GSAP (magnétisme) : la transition ne porte que
+    sur le filtre, sans quoi les deux se disputeraient la même propriété.
+  */
+  .footer-wordmark .char {
+    transition: filter 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, filter;
+  }
+
+  .footer-wordmark .char.is-lit {
+    filter:
+      drop-shadow(0 0 16px rgba(201, 168, 106, 0.6))
+      drop-shadow(0 0 42px rgba(201, 168, 106, 0.3));
+  }
+
+  /*
+    BOUTONS. Un éclat traverse la pilule au survol. Le pseudo-élément est
+    masqué par `overflow: hidden` du parent et n'intercepte aucun clic.
+  */
+  .footer-shine {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .footer-shine::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -140%;
+    width: 60%;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(
+      100deg,
+      transparent,
+      rgba(245, 240, 232, 0.55),
+      transparent
+    );
+    transform: skewX(-18deg);
+    transition: left 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .footer-shine:hover::after {
+    left: 140%;
+  }
+
+  /* la pilule pleine est claire : l'éclat y passe en bronze pour rester visible */
+  .footer-shine-dark::after {
+    background: linear-gradient(
+      100deg,
+      transparent,
+      rgba(138, 96, 69, 0.35),
+      transparent
+    );
+  }
+
+  /*
+    COORDONNÉES. Un soulignement doré se déploie depuis la gauche et le
+    texte glisse d'un cheveu — le `hover:opacity-70` existant reste en place.
+  */
+  .footer-link {
+    position: relative;
+    width: fit-content;
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .footer-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0.6rem;
+    height: 1px;
+    background: var(--dore);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .footer-link:hover::after {
+    transform: scaleX(1);
+  }
+
+  .footer-link:hover {
+    transform: translateX(6px);
+  }
+
+  /* aligné à droite : le trait part alors du bord droit */
+  .footer-link-right::after {
+    transform-origin: right;
+  }
+
+  .footer-link-right:hover {
+    transform: translateX(-6px);
+  }
+
+  /* LOGO. Halo doré pulsé au survol, sans toucher au `hover:-translate-y` existant. */
+  .footer-logo {
+    transition:
+      transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .footer-logo:hover {
+    box-shadow:
+      0 0 0 1px rgba(201, 168, 106, 0.6),
+      0 12px 40px -8px rgba(201, 168, 106, 0.55);
+  }
+
+  /* FLÈCHE « retour en haut » : petit saut en boucle au survol. */
+  .footer-top-arrow {
+    display: inline-block;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .footer-top:hover .footer-top-arrow {
+    animation: footer-hop 0.9s ease-in-out infinite;
+  }
+
+  @keyframes footer-hop {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    45% {
+      transform: translateY(-5px);
+    }
+  }
+
+  /* Filet du bas : un point lumineux le parcourt en continu. */
+  .footer-rule {
+    position: relative;
+  }
+
+  .footer-rule::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: 0;
+    height: 1px;
+    width: 22%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(201, 168, 106, 0.9),
+      transparent
+    );
+    animation: footer-trace 9s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  }
+
+  @keyframes footer-trace {
+    0% {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+    12%,
+    88% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(460%);
+      opacity: 0;
+    }
+  }
+}
+
+/*
+  SURCHARGES DE L'INVERSION.
+  ----------------------------------------------------------------------
+  Placées dans `@layer utilities` et NON dans `@layer components` : Tailwind
+  émet ses couches dans l'ordre base → components → utilities, si bien qu'une
+  surcharge écrite côté « components » était systématiquement battue par
+  l'utilitaire d'origine (`bg-ivoire`, `text-bronze`…) à spécificité pourtant
+  plus faible. Ici elles arrivent après, et l'inversion s'applique vraiment.
+
+  Les opacités d'origine sont reproduites à l'identique : seule la teinte de
+  référence change (`--f-ink` au lieu de l'ivoire fixe).
+*/
+@layer utilities {
+  /*
+    Les enfants héritent de `color`, mais les utilitaires Tailwind
+    (`text-ivoire/55`, `border-ivoire/20`, `bg-ivoire`…) portent des couleurs
+    FIXES qui ne suivraient pas la bascule. On les redirige ici vers les deux
+    variables, en conservant exactement les mêmes opacités qu'avant.
+  */
+  .footer-invert .text-ivoire\/55 {
+    color: color-mix(in oklab, transparent 45%, var(--f-ink));
+  }
+
+  .footer-invert .text-ivoire\/70 {
+    color: color-mix(in oklab, transparent 30%, var(--f-ink));
+  }
+
+  .footer-invert .border-ivoire\/20 {
+    border-color: color-mix(in oklab, transparent 80%, var(--f-ink));
+  }
+
+  .footer-invert .border-ivoire\/70 {
+    border-color: color-mix(in oklab, transparent 30%, var(--f-ink));
+  }
+
+  /* pilule pleine et carte du logo : fond = encre, texte = fond (négatif local) */
+  .footer-invert .bg-ivoire {
+    background-color: var(--f-ink);
+  }
+
+  .footer-invert .text-bronze {
+    color: var(--f-bg);
+  }
+
+  .footer-invert.footer-invert .hover\:bg-ivoire:hover {
+    background-color: var(--f-ink);
+  }
+
+  .footer-invert.footer-invert .hover\:text-bronze:hover {
+    color: var(--f-bg);
+  }
+
+  .footer-invert.footer-invert .hover\:border-ivoire:hover {
+    border-color: var(--f-ink);
+  }
+
+  .footer-invert.footer-invert .hover\:text-ivoire:hover {
+    color: var(--f-ink);
+  }
+
+  /*
+    `hover:bg-blanc` est un blanc FIXE : pendant la phase inversée le fond du
+    bloc est déjà ivoire, et la pilule survolée s'y dissoudrait. On l'éclaircit
+    donc relativement à l'encre courante, ce qui conserve l'effet « la pilule
+    s'illumine » dans les deux états.
+  */
+  /*
+    `.footer-invert` répété sur TOUTES les surcharges `:hover` : un cran de
+    spécificité en plus, sans changer ce qui est sélectionné. Tailwind émet ses
+    variantes `hover:` tout à la FIN de la couche utilitaires — donc après ces
+    règles — et à spécificité égale la dernière l'emporterait. Les surcharges
+    sans `:hover` n'en ont pas besoin : leurs utilitaires d'origine sont émis
+    plus haut dans la couche.
+  */
+  .footer-invert.footer-invert .hover\:bg-blanc:hover {
+    background-color: color-mix(in oklab, var(--blanc) 45%, var(--f-ink));
   }
 }

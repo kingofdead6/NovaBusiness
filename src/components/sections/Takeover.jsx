@@ -9,7 +9,7 @@ import LiquidVeil from "../LiquidVeil";
 import building from "../../assets/takeover/takeover1.svg";
 import flower from "../../assets/takeover/takeover2.svg";
 import centerArt from "../../assets/takeover/takeover3.svg";
-
+import SharedMedia from "../SharedMedia";
 gsap.registerPlugin(ScrollTrigger);
 
 
@@ -64,30 +64,9 @@ export default function Takeover() {
       gsap.set(sub, { opacity: 0, y: 30 });
       if (rule) gsap.set(rule, { scaleX: 0, transformOrigin: "0% 50%" });
 
-      /*
-       * La couche description part masquée : elle n'entre qu'une fois le titre
-       * sorti.
-       *
-       * Les visuels de bord (desktop) PIVOTENT POUR ENTRER. Leur pivot est
-       * placé très haut au-dessus d'eux (`transformOrigin: 50% -140%`) : à
-       * cette distance, une rotation décrit un arc large, et c'est cet arc —
-       * pas une translation — qui les fait venir du hors-champ jusqu'à leur
-       * place. Le point d'ancrage reste rigoureusement fixe ; seule
-       * l'amplitude de départ change.
-       *
-       * L'amplitude est réduite sur téléphone : à largeur étroite, un arc de
-       * 38° projette l'image bien plus loin (le rayon est le même, mais l'écran
-       * est deux fois moins large), et elle disparaissait trop longtemps avant
-       * de revenir. 24° donne la même lecture sur un petit écran.
-       */
+    
       const SWING = window.matchMedia("(max-width: 767px)").matches ? 24 : 38;
 
-      /*
-       * La couche titre est ancrée en haut (`items-start`) mais démarre avec
-       * un grand retrait qui la place optiquement au CENTRE du cadre. C'est ce
-       * retrait que le relais rétracte : le mot remonte donc en se repliant,
-       * sans jamais quitter l'écran.
-       */
       if (titleLayer) gsap.set(titleLayer, { paddingTop: "38vh" });
 
       if (descLayer) gsap.set(descLayer, { opacity: 0 });
@@ -98,12 +77,6 @@ export default function Takeover() {
         gsap.set(rightArt, { opacity: 0, rotate: SWING, transformOrigin: "50% -140%" });
       }
 
-      /*
-       * Le visuel central (mobile uniquement) n'a pas besoin d'un pivot
-       * excentré : il est seul au milieu du cadre, donc son entrée est un
-       * simple pop-and-settle sur son propre centre — un arc n'ajouterait
-       * rien puisqu'il n'y a pas de hors-champ latéral à traverser.
-       */
       if (centerArtEl) {
         gsap.set(centerArtEl, {
           opacity: 0,
@@ -121,10 +94,7 @@ export default function Takeover() {
         gsap.set(chars, { opacity: 1, yPercent: 0, rotate: 0 });
         gsap.set(sub, { opacity: 1, y: 0 });
         if (rule) gsap.set(rule, { scaleX: 1 });
-        /*
-         * Sans mouvement, on affiche directement l'état final : le titre déjà
-         * replié en signature compacte, la description en place dessous.
-         */
+  
         if (titleLayer) gsap.set(titleLayer, { paddingTop: "7vh" });
         gsap.set(word, { scale: 0.3 });
         if (descLayer) gsap.set(descLayer, { opacity: 1 });
@@ -133,10 +103,6 @@ export default function Takeover() {
         });
         return;
       }
-
-      /* ------------------------------------------------------------------ */
-      /* TEXTE — timeline anime.js pilotée par la progression du voile       */
-      /* ------------------------------------------------------------------ */
 
       const timeline = anime.timeline({ autoplay: false, easing: "easeOutExpo" });
 
@@ -148,13 +114,6 @@ export default function Takeover() {
         duration: 1100,
         delay: anime.stagger(55),
       });
-
-      /*
-       * NB : seul le TITRE est piloté par la coulée. La description ne fait
-       * plus partie de cette timeline — elle entre plus tard, une fois le
-       * titre sorti du cadre, et dépend donc du scroll et non de la
-       * progression du voile (voir « RELAIS » plus bas).
-       */
 
       textTimeline.current = timeline;
 
@@ -176,22 +135,6 @@ export default function Takeover() {
         );
       }
 
-      /* ------------------------------------------------------------------ */
-      /* RELAIS — le titre sort, la description et les visuels prennent la    */
-      /* place                                                                */
-      /* ------------------------------------------------------------------ */
-      /*
-       * Une seule timeline scrubée sur toute la traversée de la section. Les
-       * positions sont des fractions de sa durée (0 → 1) et se lisent donc
-       * directement comme une progression de scroll :
-       *
-       *   0.00 → 0.62  la coulée monte, le titre se révèle dessus
-       *                (piloté par `updateText`, pas par cette timeline)
-       *   0.62 → 0.72  LE TITRE S'ÉLÈVE ET SORT par le haut
-       *   0.66 → 0.88  les visuels entrent (pivot sur desktop, pop au centre
-       *                sur mobile), texte entre
-       *   0.86 → 1.00  maintien : tout est lisible avant le passage à Values
-       */
 
       const relay = gsap.timeline({
         scrollTrigger: {
@@ -210,18 +153,6 @@ export default function Takeover() {
         0
       );
 
-      /*
-       * ...puis IL SE REPLIE au lieu de partir.
-       *
-       * Deux tweens simultanés :
-       *  - le mot se réduit à ~28 % (origine en haut, donc il se ramasse vers
-       *    son propre bord supérieur) ;
-       *  - la couche remonte en rétractant son padding, de 38vh à 7vh.
-       *
-       * Résultat : « nova. » vient se poser en petit sous l'eyebrow et Y RESTE
-       * jusqu'à la fin de la section. Comme la timeline est scrubée, remonter
-       * le déplie exactement à l'envers — il grandit et retrouve le centre.
-       */
       relay.to(
         word,
         { scale: 0.28, y: 0, ease: "power2.inOut", duration: 0.16 },
@@ -241,12 +172,6 @@ export default function Takeover() {
         relay.to(descLayer, { opacity: 1, duration: 0.02 }, 0.66);
       }
 
-      /*
-       * Les visuels de bord (desktop) ENTRENT EN PIVOTANT : ils partent à
-       * ~38° — donc bien au-delà des bords — et l'arc les amène jusqu'à leur
-       * position de repos. Le fondu accompagne le mouvement au lieu de le
-       * remplacer.
-       */
       [
         [leftArt, 0.66],
         [rightArt, 0.68],
@@ -264,17 +189,9 @@ export default function Takeover() {
         );
       });
 
-      /*
-       * Le visuel central (mobile) POP depuis un léger retrait/rotation avec
-       * un rebond en fin de course (`back.out`) : seul au milieu du cadre, il
-       * peut se permettre une entrée plus affirmée que les pièces de bord.
-       */
+
       if (centerArtEl) {
-        /*
-          Entrée avancée à 0.42 (au lieu de 0.67) : le visuel n'atteignait sa
-          pleine opacité qu'en toute fin de section, si bien qu'on traversait
-          la majeure partie du bloc mobile sur un écran quasi vide.
-        */
+       
         relay.to(
           centerArtEl,
           {
@@ -332,19 +249,6 @@ export default function Takeover() {
           Depuis 2019 — 40+ marques accompagnées
         </p>
 
-        {/* ====================== TITRE ====================== */}
-        {/*
-          Le titre NE DISPARAÎT PAS. Il occupe d'abord tout le cadre, puis se
-          replie vers le haut pour devenir une signature compacte qui reste
-          affichée pendant toute la suite de la section.
-
-          Le pli est un simple `scale` : la couche est ancrée en haut
-          (`items-start` + un padding qui la descend au centre), et c'est GSAP
-          qui rétracte ce padding. Le mot se réduit donc VERS SON BORD
-          SUPÉRIEUR au lieu de fuir hors du cadre — rien ne sort, donc rien
-          n'a besoin de « revenir » à la remontée.
-        */}
-
         <div
           data-title-layer
           className="pointer-events-none absolute inset-0 z-10 flex items-start justify-center px-5 will-change-transform"
@@ -362,58 +266,39 @@ export default function Takeover() {
           </h2>
         </div>
 
-        {/* ============= DESCRIPTION + VISUELS DE BORD ============= */}
-        {/*
-          Les visuels de bord (gauche/droite) sont réservés au desktop
-          (`hidden md:block`) : deux PNG détourés posés tels quels, sans
-          cadre ni fond, ancrés sur les côtés. Sur mobile, un visuel CENTRAL
-          UNIQUE (différent des deux autres) prend leur place — voir plus bas.
-        */}
-
         <div
           data-desc-layer
           className="absolute inset-0 z-10 flex items-center will-change-transform"
         >
           {/* -------------- VISUEL GAUCHE (desktop uniquement) -------------- */}
 
-          <figure
-            data-art-left
-            aria-hidden="true"
-            className="
-              pointer-events-none absolute hidden origin-top will-change-transform
-              md:block md:left-0 md:top-[34%] md:w-[32vw] md:max-w-[300px] md:opacity-100
-              lg:max-w-[380px]
-              xl:max-w-[430px]
-            "
-          >
-            <img
-              src={building}
-              alt=""
-              loading="lazy"
-              className="block w-full"
-            />
-          </figure>
+       <figure
+  data-art-left
+  aria-hidden="true"
+  className="
+    pointer-events-none absolute hidden origin-top will-change-transform
+    md:block ] md:top-[34%] md:w-[26vw] md:max-w-[240px] md:opacity-100
+     lg:max-w-[300px]
+     xl:max-w-[340px]
+  "
+>
+  <SharedMedia src={building} alt="" loading="lazy" className="block w-full" />
+</figure>
 
-          {/* -------------- VISUEL DROIT (desktop uniquement) -------------- */}
+{/* -------------- VISUEL DROIT (desktop uniquement) -------------- */}
 
-          <figure
-            data-art-right
-            aria-hidden="true"
-            className="
-              pointer-events-none absolute hidden origin-top will-change-transform
-              md:block md:right-0 md:top-[34%] md:w-[28vw] md:max-w-[280px] md:opacity-100
-              lg:max-w-[340px]
-              xl:max-w-[390px]
-            "
-          >
-            <img
-              src={flower}
-              alt=""
-              loading="lazy"
-              className="block w-full"
-            />
-          </figure>
-
+<figure
+  data-art-right
+  aria-hidden="true"
+  className="
+    pointer-events-none absolute hidden origin-top will-change-transform
+    md:block md:-right-[4vw] md:top-[34%] md:w-[22vw] md:max-w-[220px] md:opacity-100
+    lg:-right-[5vw] lg:max-w-[270px]
+    xl:-right-[6vw] xl:max-w-[310px]
+  "
+>
+  <SharedMedia src={flower} alt="" loading="lazy" className="block w-full" />
+</figure>
           {/* -------------- VISUEL CENTRAL (mobile uniquement) -------------- */}
 
           <figure

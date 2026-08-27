@@ -41,20 +41,7 @@ export default function Hero({ ready = true }) {
         .from(fades, { y: 22, opacity: 0, duration: 1, stagger: 0.09 }, "-=0.85")
         .from(arts, { yPercent: 12, opacity: 0, duration: 1.6, stagger: 0.12 }, "-=1.2");
 
-      /*
-       * MOBILE — VA-ET-VIENT RÉGULIER DES VISUELS
-       *
-       * Sur grand écran, les images vivent déjà : chaque éclat de
-       * <SharedMedia> flotte de son côté et dérive au scroll. Ce mouvement
-       * est volontairement désordonné, donc illisible sur un petit écran.
-       *
-       * En mobile on anime donc le CONTENEUR entier : les deux visuels
-       * montent et descendent d'un seul bloc, à vitesse constante et en
-       * boucle (yoyo), ce qui donne un balancement régulier.
-       *
-       * `matchMedia` de GSAP : l'animation n'existe QUE sous 1024 px et est
-       * défaite automatiquement au-delà (ou à la rotation de l'écran).
-       */
+  
       const mm = gsap.matchMedia();
 
       mm.add("(max-width: 1023px)", () => {
@@ -102,16 +89,6 @@ export default function Hero({ ready = true }) {
       {/* colonnes d'images décoratives, gauche + droite */}
       <div
         data-art
-        /*
-          MOBILE : le visuel gauche est ancré EN BAS À GAUCHE.
-
-          Il passe AU-DESSUS du voile de lisibilité (z-[6], comme le visuel
-          droit) pour rester réellement visible, mais il est cantonné à la
-          bande sous les boutons : `h-[16vh]` collé en bas, donc les deux
-          appels à l'action restent entièrement dégagés.
-
-          À partir de `lg` il retrouve sa colonne pleine hauteur d'origine.
-        */
         className="pointer-events-none absolute -left-10 bottom-0 z-[6] block h-[34vh] w-[62vw] max-w-[260px] lg:-left-24 lg:bottom-auto lg:top-0 lg:z-0 lg:h-full lg:w-[26vw] lg:max-w-[380px]"
       >
         <SharedMedia

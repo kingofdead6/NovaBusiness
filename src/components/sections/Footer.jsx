@@ -122,7 +122,135 @@ export default function Footer() {
       // les polices web changent la largeur des glyphes : on remesure après
       document.fonts?.ready.then(fitWordmark);
       window.addEventListener("resize", fitWordmark);
-      cleanup = () => window.removeEventListener("resize", fitWordmark);
+
+      /* ------------------------------------------------------------------ */
+      /* 4. MAGNÉTISME DES LETTRES                                           */
+      /* ------------------------------------------------------------------ */
+
+      /*
+       * Les lettres proches du curseur se soulèvent et s'éclairent, avec une
+       * décroissance douce selon la distance — le mot « respire » sous la
+       * souris au lieu de réagir lettre par lettre.
+       *
+       * Un seul écouteur posé sur le NOM (et non un par caractère) : il y a
+       * une quinzaine de spans, et `pointermove` par lettre multiplierait les
+       * appels sans rien apporter.
+       *
+       * `quickTo` plutôt que `gsap.to` : il réutilise le même tween pour
+       * chaque lettre au lieu d'en créer un par déplacement du curseur, ce
+       * qui reste fluide même à 120 Hz.
+       */
+      const wordNode = wordmark.current;
+      const setters = chars.map((char) => ({
+        char,
+        y: gsap.quickTo(char, "y", { duration: 0.5, ease: "power3.out" }),
+        scale: gsap.quickTo(char, "scale", { duration: 0.5, ease: "power3.out" }),
+      }));
+
+      // rayon d'influence : au-delà, la lettre est au repos
+      const RADIUS = 190;
+
+      const onPointerMove = (event) => {
+        setters.forEach(({ char, y, scale }) => {
+          const rect = char.getBoundingClientRect();
+          const cx = rect.left + rect.width / 2;
+          const cy = rect.top + rect.height / 2;
+          const distance = Math.hypot(event.clientX - cx, event.clientY - cy);
+          // 0 au bord du rayon, 1 sous le curseur
+          const force = Math.max(0, 1 - distance / RADIUS);
+          y(-38 * force);
+          scale(1 + 0.14 * force);
+          char.classList.toggle("is-lit", force > 0.12);
+        });
+      };
+
+      const onPointerLeave = () => {
+        setters.forEach(({ char, y, scale }) => {
+          y(0);
+          scale(1);
+          char.classList.remove("is-lit");
+        });
+      };
+
+      /*
+       * `(hover: hover)` : sur un écran tactile un `pointermove` isolé
+       * laisserait les lettres soulevées sans jamais recevoir de « leave ».
+       */
+      const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+      if (finePointer) {
+        wordNode.addEventListener("pointermove", onPointerMove);
+        wordNode.addEventListener("pointerleave", onPointerLeave);
+      }
+
+      /* ------------------------------------------------------------------ */
+      /* 5. INVERSION DES COULEURS À L'ENTRÉE                                */
+      /* ------------------------------------------------------------------ */
+
+      /*
+       * Le pied de page se présente en négatif (fond ivoire, encre bronze)
+       * puis rejoint ses couleurs normales à mesure qu'il monte à l'écran.
+       *
+       * On anime UNE variable, `--f-mix` (0 = inversé, 1 = normal) : la
+       * feuille de styles en dérive le fond, l'encre, les bordures et les
+       * butées du dégradé du nom. Animer les couleurs une par une depuis JS
+       * imposerait de connaître ici chaque élément du bloc.
+       *
+       * `end: "top center"` : la bascule est CONSOMMÉE dès que le haut du
+       * pied de page atteint le milieu de l'écran. Elle sert d'entrée en
+       * matière ; la prolonger jusqu'en bas laisserait le bloc à demi
+       * inversé pendant toute sa lecture.
+       */
+      const invert = gsap.fromTo(
+        root.current,
+        { "--f-mix": 0, "--f-inv": 1 },
+        {
+          "--f-mix": 1,
+          "--f-inv": 0,
+          ease: "none",
+          scrollTrigger: {
+            trigger: root.current,
+            start: "top bottom",
+            end: "top center",
+            scrub: 0.8,
+          },
+        }
+      );
+
+      /* ------------------------------------------------------------------ */
+      /* 6. PARALLAXE DU NOM                                                 */
+      /* ------------------------------------------------------------------ */
+
+      /*
+       * Le nom monte légèrement pendant que le pied de page défile : le bloc
+       * gagne de la profondeur sans qu'aucun élément ne change de place au
+       * repos (le décalage revient à zéro à mi-parcours).
+       */
+      const parallax = gsap.fromTo(
+        wordNode,
+        { yPercent: 6 },
+        {
+          yPercent: -4,
+          ease: "none",
+          scrollTrigger: {
+            trigger: root.current,
+            start: "top bottom",
+            end: "bottom bottom",
+            scrub: 0.6,
+          },
+        }
+      );
+
+      cleanup = () => {
+        window.removeEventListener("resize", fitWordmark);
+        if (finePointer) {
+          wordNode.removeEventListener("pointermove", onPointerMove);
+          wordNode.removeEventListener("pointerleave", onPointerLeave);
+        }
+        parallax.scrollTrigger?.kill();
+        parallax.kill();
+        invert.scrollTrigger?.kill();
+        invert.kill();
+      };
     }, root);
 
     return () => {
@@ -137,7 +265,7 @@ export default function Footer() {
     <footer
       ref={root}
       id="contact"
-      className="relative flex flex-col overflow-hidden bg-bronze px-5 py-10 text-ivoire md:px-10 md:py-12"
+      className="footer-invert footer-aurora relative flex flex-col overflow-hidden px-5 py-10 md:px-10 md:py-12"
     >
       {/* ---------------- HAUT : logo + actions ---------------- */}
       <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
@@ -151,7 +279,7 @@ export default function Footer() {
           href="#top"
           data-cursor="hover"
           aria-label="Nova Business, retour en haut"
-          className="inline-block w-fit rounded-[4px] bg-ivoire p-3 transition-transform duration-500 ease-nova hover:-translate-y-0.5 md:p-4"
+          className="footer-logo inline-block w-fit rounded-[4px] bg-ivoire p-3 ease-nova hover:-translate-y-0.5 md:p-4"
         >
           <img
             src={logo}
@@ -164,14 +292,14 @@ export default function Footer() {
           <a
             href="#realisations"
             data-cursor="hover"
-            className="rounded-full border border-ivoire/70 px-7 py-3 text-center text-[13px] font-bold lowercase transition-colors duration-500 ease-nova hover:border-ivoire hover:bg-ivoire hover:text-bronze"
+            className="footer-shine rounded-full border border-ivoire/70 px-7 py-3 text-center text-[13px] font-bold lowercase transition-colors duration-500 ease-nova hover:border-ivoire hover:bg-ivoire hover:text-bronze"
           >
             nos réalisations
           </a>
           <a
             href={`mailto:${contact.email}`}
             data-cursor="hover"
-            className="rounded-full bg-ivoire px-7 py-3 text-center text-[13px] font-bold lowercase text-bronze transition-colors duration-500 ease-nova hover:bg-blanc"
+            className="footer-shine footer-shine-dark rounded-full bg-ivoire px-7 py-3 text-center text-[13px] font-bold lowercase text-bronze transition-colors duration-500 ease-nova hover:bg-blanc"
           >
             parlons-en
           </a>
@@ -203,14 +331,14 @@ export default function Footer() {
           <a
             href={`tel:${contact.phone.replace(/\s/g, "")}`}
             data-cursor="hover"
-            className="block py-3 transition-opacity duration-500 hover:opacity-70"
+            className="footer-link footer-link-right block py-3 transition-opacity duration-500 hover:opacity-70"
           >
             {contact.phone}
           </a>
           <a
             href={`mailto:${contact.email}`}
             data-cursor="hover"
-            className="block py-3 transition-opacity duration-500 hover:opacity-70"
+            className="footer-link footer-link-right block py-3 transition-opacity duration-500 hover:opacity-70"
           >
             {contact.email}
           </a>
@@ -237,20 +365,20 @@ export default function Footer() {
           de la largeur RÉELLE du conteneur, le mot remplit toujours la ligne
           au pixel près.
         */
-        className="mt-10 w-full whitespace-nowrap pb-[0.04em] font-black leading-[0.78] tracking-[-0.045em]"
+        className="footer-wordmark mt-10 w-full whitespace-nowrap pb-[0.04em] font-black leading-[0.78] tracking-[-0.045em]"
       >
         nova business.
       </h2>
 
       {/* ---------------- BARRE DE BAS DE PAGE ---------------- */}
-      <div className="mt-6 flex items-center justify-between border-t border-ivoire/20 pt-5 text-[12px] font-bold lowercase text-ivoire/70">
+      <div className="footer-rule mt-6 flex items-center justify-between border-t border-ivoire/20 pt-5 text-[12px] font-bold lowercase text-ivoire/70">
         <span>@nova {year}</span>
         <a
           href="#top"
           data-cursor="hover"
-          className="-my-3 py-3 transition-opacity duration-500 hover:text-ivoire hover:opacity-100"
+          className="footer-top -my-3 py-3 transition-opacity duration-500 hover:text-ivoire hover:opacity-100"
         >
-          retour en haut ↑
+          retour en haut <span className="footer-top-arrow">↑</span>
         </a>
       </div>
     </footer>
