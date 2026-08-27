@@ -43,8 +43,10 @@ export default function App() {
         <main>
           <Hero ready={ready} />
           <Clients />
+          <div className="bg-black">
           <Takeover />
           <Values />
+          </div>
           <Services />
           <Work />
           <Marquee />
