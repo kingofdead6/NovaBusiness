@@ -94,3 +94,66 @@ export function splitChars(el) {
 export const prefersReducedMotion = () =>
   typeof window !== "undefined" &&
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/**
+ * Découpe en CARACTÈRES tout en conservant le balisage interne.
+ *
+ * `splitChars` remplace le contenu par `textContent` : c'est suffisant pour un
+ * mot nu (le nom du pied de page), mais cela détruirait l'italique didone et
+ * la graisse du titre du Hero. On réutilise donc la descente d'arbre de
+ * `splitWords`, en emballant chaque lettre plutôt que chaque mot.
+ *
+ * Les espaces deviennent des spans insécables eux aussi : sans cela les mots
+ * se ressouderaient une fois chaque lettre passée en `inline-block`.
+ */
+export function splitCharsRich(el) {
+  if (!el || el.dataset.split === "true") {
+    return el ? Array.from(el.querySelectorAll(".char")) : [];
+  }
+
+  el.setAttribute("aria-label", el.textContent.replace(/\s+/g, " ").trim());
+  el.dataset.split = "true";
+
+  const makeChar = (character) => {
+    const span = document.createElement("span");
+    span.className = "char";
+    span.style.display = "inline-block";
+    span.style.willChange = "transform";
+    span.textContent = character === " " ? " " : character;
+    span.setAttribute("aria-hidden", "true");
+    return span;
+  };
+
+  const walk = (node) => {
+    const out = [];
+
+    Array.from(node.childNodes).forEach((child) => {
+      if (child.nodeType === Node.TEXT_NODE) {
+        /*
+          On normalise les blancs AVANT de découper : le JSX indente le
+          balisage, et les retours à la ligne deviendraient sinon autant
+          d'espaces parasites entre les mots.
+        */
+        const text = child.textContent.replace(/\s+/g, " ");
+        if (!text) return;
+        text.split("").forEach((character) => out.push(makeChar(character)));
+        return;
+      }
+
+      if (child.nodeType === Node.ELEMENT_NODE) {
+        const clone = child.cloneNode(false);
+        clone.setAttribute("aria-hidden", "true");
+        walk(child).forEach((n) => clone.appendChild(n));
+        out.push(clone);
+      }
+    });
+
+    return out;
+  };
+
+  const parts = walk(el);
+  el.innerHTML = "";
+  parts.forEach((n) => el.appendChild(n));
+
+  return Array.from(el.querySelectorAll(".char"));
+}

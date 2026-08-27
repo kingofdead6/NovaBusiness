@@ -180,6 +180,17 @@
     overflow: hidden;
     vertical-align: bottom;
   }
+
+  /*
+    Le rognage ne sert QUE pendant l'entrée (les mots montent depuis le bas et
+    doivent être coupés au ras de la ligne). Une fois l'animation jouée, il
+    empêcherait les lettres soulevées par le magnétisme de dépasser vers le
+    haut : elles seraient tranchées net. On le relâche donc, ce que le Hero
+    signale en posant `data-split-done` à la fin de sa timeline.
+  */
+  [data-split-done="true"] .split-line {
+    overflow: visible;
+  }
   .split-inner {
     display: block;
     will-change: transform;
@@ -246,6 +257,61 @@
 }
 
 @layer components {
+  /* ==================================================================== */
+  /* HERO — PROJECTEUR D'INVERSION                                        */
+  /* ==================================================================== */
+
+  /*
+    Le calque jumeau du titre n'est visible qu'à l'intérieur d'un disque qui
+    suit le curseur. Le disque est décrit par trois variables animées depuis
+    GSAP : centre (`--spot-x`, `--spot-y`) et rayon (`--spot-r`).
+
+    `--spot-r` vaut 0 au repos : sans mouvement de souris, le calque est
+    entièrement masqué et le titre s'affiche normalement.
+  */
+  .hero-spot {
+    --spot-x: 50%;
+    --spot-y: 50%;
+    --spot-r: 0px;
+
+    /*
+      AUCUN fond : seules les LETTRES du calque changent de couleur. Peindre
+      un fond ici dessinerait un disque sombre sur le titre — ce n'est pas
+      une inversion du bloc, juste une recoloration des glyphes traversés.
+    */
+
+    /*
+      `transparent` APRÈS la butée opaque, et non l'inverse : le disque doit
+      être plein au centre et disparaître au bord. Le second `radial-gradient`
+      est identique — Safari n'applique `mask-image` qu'avec le préfixe.
+    */
+    -webkit-mask-image: radial-gradient(
+      circle var(--spot-r) at var(--spot-x) var(--spot-y),
+      #000 0%,
+      #000 62%,
+      transparent 100%
+    );
+    mask-image: radial-gradient(
+      circle var(--spot-r) at var(--spot-x) var(--spot-y),
+      #000 0%,
+      #000 62%,
+      transparent 100%
+    );
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+  }
+
+  /*
+    Le mouvement réduit désactive l'effet : sans animation des variables le
+    calque resterait figé sur son dernier point, et le titre s'afficherait
+    avec une tache de couleur permanente.
+  */
+  @media (prefers-reduced-motion: reduce) {
+    .hero-spot {
+      display: none;
+    }
+  }
+
   /* ==================================================================== */
   /* MENU PLEIN ÉCRAN (ordinateur)                                        */
   /* ==================================================================== */
