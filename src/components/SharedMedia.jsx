@@ -5,14 +5,15 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
 /**
- * EMPLACEMENT IMAGE — VERSION ÉCLATÉE ET VIVANTE.
+ * EMPLACEMENT IMAGE — VERSION ÉCLATÉE ET FLOTTANTE.
  *
  * Découpe UNE SEULE image en quadrilatères (coupes obliques horizontales ET
- * verticales) et anime chaque morceau sur TROIS couches indépendantes :
+ * verticales) et anime chaque morceau sur QUATRE couches indépendantes :
  *
  *   1. dérive permanente  — le morceau flotte en boucle, même à l'arrêt
- *   2. dérive au scroll   — chaque morceau glisse à sa propre vitesse
- *   3. dérive interne     — l'illustration bouge À L'INTÉRIEUR de son cadre,
+ *   2. respiration        — le morceau enfle et se rétracte doucement (couche 1)
+ *   3. dérive au scroll   — chaque morceau glisse à sa propre vitesse
+ *   4. dérive interne     — l'illustration bouge À L'INTÉRIEUR de son cadre,
  *                           la découpe, elle, ne bouge pas
  *
  * Chaque couche vit sur son propre élément : c'est ce qui leur permet de
@@ -27,7 +28,8 @@ gsap.registerPlugin(ScrollTrigger);
  *  - rows         : bandes horizontales (3 à 7 ; 5 par défaut)
  *  - chaos        : 0 = sage, 1 = très disloqué (défaut 0.7)
  *  - spread       : amplitude du décalage au scroll, en % (défaut 9)
- *  - drift        : amplitude de la dérive permanente, en % (défaut 1.6 ; 0 = figé)
+ *  - drift        : amplitude de la dérive permanente, en % (défaut 2.4 ; 0 = figé)
+ *  - bob          : amplitude de la respiration (échelle), en % (défaut 3.5 ; 0 = pas de respiration)
  *  - innerDrift   : amplitude du mouvement interne, en % (défaut 0)
  *  - seed         : change toute la découpe sans toucher au reste
  *  - tone         : "light" (sur ivoire) | "dark" (sur charbon)
@@ -40,14 +42,15 @@ export default function ShardedMedia({
   rows = 5,
   chaos = 0.7,
   spread = 9,
-  drift = 1.6,
+  drift = 2.4,
+  bob = 3.5,
   innerDrift = 0,
   seed = 1,
   tone = "light",
   className = "",
 }) {
   const root = useRef(null);
-  const floaters = useRef([]); // couche 1 — dérive permanente
+  const floaters = useRef([]); // couche 1 — dérive permanente + respiration
   const shards = useRef([]); // couche 2 — découpe + dérive au scroll
   const inners = useRef([]); // couche 3 — mouvement interne
 
@@ -98,7 +101,7 @@ export default function ShardedMedia({
       });
 
       pieces.forEach((p, i) => {
-        /* ---- couche 2 : dérive au scroll ---- */
+        /* ---- couche 3 : dérive au scroll ---- */
         gsap.fromTo(
           shardNodes[i],
           { xPercent: p.x, yPercent: p.y },
@@ -115,40 +118,58 @@ export default function ShardedMedia({
           }
         );
 
-        /* ---- couche 1 : dérive permanente ---- */
-        if (drift > 0 && floatNodes[i]) {
+        /* ---- couche 1 : dérive permanente + respiration ---- */
+        if ((drift > 0 || bob > 0) && floatNodes[i]) {
           const node = floatNodes[i];
           gsap.set(node, { transformOrigin: `${p.cx}% ${p.cy}%` });
 
-          // trois boucles de durées premières entre elles : le motif ne se
-          // répète pas à l'œil, le morceau a l'air de flotter librement
-          gsap.to(node, {
-            xPercent: p.dx * drift,
-            duration: p.t1,
-            ease: "sine.inOut",
-            repeat: -1,
-            yoyo: true,
-            delay: -p.t1 * p.phase,
-          });
-          gsap.to(node, {
-            yPercent: p.dy * drift,
-            duration: p.t2,
-            ease: "sine.inOut",
-            repeat: -1,
-            yoyo: true,
-            delay: -p.t2 * p.phase,
-          });
-          gsap.to(node, {
-            rotation: p.dr * drift,
-            duration: p.t3,
-            ease: "sine.inOut",
-            repeat: -1,
-            yoyo: true,
-            delay: -p.t3 * p.phase,
-          });
+          // durées toutes premières entre elles : le motif ne se répète
+          // jamais à l'œil, le morceau a l'air de flotter librement,
+          // comme porté par un courant lent
+          if (drift > 0) {
+            gsap.to(node, {
+              xPercent: p.dx * drift,
+              duration: p.t1,
+              ease: "sine.inOut",
+              repeat: -1,
+              yoyo: true,
+              delay: -p.t1 * p.phase,
+            });
+            gsap.to(node, {
+              yPercent: p.dy * drift,
+              duration: p.t2,
+              ease: "sine.inOut",
+              repeat: -1,
+              yoyo: true,
+              delay: -p.t2 * p.phase,
+            });
+            gsap.to(node, {
+              rotation: p.dr * drift,
+              duration: p.t3,
+              ease: "sine.inOut",
+              repeat: -1,
+              yoyo: true,
+              delay: -p.t3 * p.phase,
+            });
+          }
+
+          // respiration : le morceau enfle et se rétracte doucement,
+          // sur un rythme distinct des trois dérives ci-dessus — c'est
+          // ce léger gonflement qui donne l'impression de flottaison,
+          // plus que le simple déplacement
+          if (bob > 0) {
+            gsap.to(node, {
+              scale: 1 + (p.ds * bob) / 100,
+              duration: p.t4,
+              ease: "sine.inOut",
+              repeat: -1,
+              yoyo: true,
+              delay: -p.t4 * p.phase,
+            });
+          }
         }
 
-        /* ---- couche 3 : l'illustration bouge dans son cadre ---- */
+        /* ---- couche 4 : l'illustration bouge dans son cadre ---- */
         if (innerDrift > 0 && innerNodes[i]) {
           gsap.to(innerNodes[i], {
             xPercent: -p.dx * innerDrift,
@@ -164,7 +185,7 @@ export default function ShardedMedia({
     }, root);
 
     return () => ctx.revert();
-  }, [pieces, drift, innerDrift]);
+  }, [pieces, drift, bob, innerDrift]);
 
   const dark = tone === "dark";
 
@@ -177,7 +198,7 @@ export default function ShardedMedia({
       aria-label={src ? alt : undefined}
     >
       {pieces.map((p, i) => (
-        // couche 1 — flotte en boucle
+        // couche 1 — flotte et respire en boucle
         <div
           key={i}
           ref={(el) => (floaters.current[i] = el)}
@@ -257,7 +278,7 @@ const edgeAt = (edge, x) => edge.l + (edge.r - edge.l) * (x / 100);
  * 2. Recoupe certaines bandes verticalement — la coupe penche elle aussi —
  *    ce qui donne des quadrilatères et non des barres.
  * 3. Attribue à chaque morceau ses décalages, son inclinaison, son échelle
- *    et les paramètres de sa dérive permanente.
+ *    et les paramètres de sa dérive permanente et de sa respiration.
  */
 function buildShards({ rows, seed, chaos, spread }) {
   const rand = rng(seed);
@@ -362,9 +383,13 @@ function makePiece(pts, rand, k, spread, rowIndex) {
     dx: r2((rand() - 0.5) * 2),
     dy: r2((rand() - 0.5) * 2),
     dr: r2((rand() - 0.5) * 1.6),
-    t1: r2(5.5 + rand() * 5),
-    t2: r2(6.5 + rand() * 5),
-    t3: r2(8 + rand() * 6),
+    // respiration : signe/amplitude de l'échelle et sa propre durée,
+    // volontairement plus lente et asynchrone que le reste
+    ds: r2(0.5 + rand() * 0.5),
+    t1: r2(6 + rand() * 6),
+    t2: r2(7 + rand() * 6),
+    t3: r2(9 + rand() * 7),
+    t4: r2(10 + rand() * 8),
     // départ décalé : les morceaux ne repartent jamais tous ensemble
     phase: r2(rand()),
   };

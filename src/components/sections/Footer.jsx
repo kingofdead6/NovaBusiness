@@ -2,139 +2,145 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { contact } from "../../data/site";
-import MagneticButton from "../MagneticButton";
 import { splitChars } from "../../lib/text";
-import { initReveals } from "../../lib/reveal";
-import TypedHeading from "../TypedHeading";
 
 gsap.registerPlugin(ScrollTrigger);
 
 /**
  * SECTION 12 — PIED DE PAGE
  *
- * Le pied de page bascule du clair au sombre pendant qu'on le traverse, puis
- * le nom géant se compose lettre par lettre, rogné par le bas de l'écran.
+ * Bloc plein bronze, épuré : le logo et deux boutons en haut, l'adresse en
+ * colonne, puis le nom géant en italique qui occupe toute la largeur et une
+ * barre de bas de page (année + email).
  *
- * L'inversion se fait en animant l'OPACITÉ d'un calque charbon posé derrière
- * le contenu, et non en interpolant des variables CSS : GSAP traite une
- * custom property non enregistrée comme une chaîne et ne sait pas interpoler
- * les `rgb()` qu'elle contient. Le texte, lui, passe en clair via une seule
- * variable `--ink` pilotée par la même progression.
+ * Pas de titre d'accroche, pas de liens sociaux, pas de barre légale : la
+ * composition repose entièrement sur le contraste d'échelle entre les petites
+ * mentions et le mot géant.
+ *
+ * Le nom se compose lettre par lettre à l'entrée dans l'écran (`splitChars`).
  */
 export default function Footer() {
   const root = useRef(null);
-  const veil = useRef(null);
   const wordmark = useRef(null);
 
   useEffect(() => {
     if (!root.current) return undefined;
 
+    let cleanup;
+
     const ctx = gsap.context(() => {
       const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      const el = root.current;
-
-      initReveals(el);
-
-      /* ------------------------------------------------------------------ */
-      /* 1. INVERSION CLAIR → SOMBRE                                         */
-      /* ------------------------------------------------------------------ */
-
-      /*
-       * Un seul curseur `t` (0 = clair, 1 = sombre) commande :
-       *  - l'opacité du calque charbon
-       *  - la couleur de l'encre, via une variable CSS reprise par tout le
-       *    contenu (`color-mix` fait le mélange, pas GSAP)
-       */
-      const invert = { t: 0 };
-      const applyInvert = () => {
-        if (veil.current) veil.current.style.opacity = String(invert.t);
-        el.style.setProperty("--ink", String(invert.t));
-      };
-
-      applyInvert();
-
-      if (!reduced) {
-        gsap.to(invert, {
-          t: 1,
-          ease: "none",
-          onUpdate: applyInvert,
-          scrollTrigger: {
-            trigger: el,
-            start: "top 85%",
-            end: "top 15%",
-            scrub: 0.6,
-            invalidateOnRefresh: true,
-          },
-        });
-      } else {
-        invert.t = 1;
-        applyInvert();
-      }
-
-      /* ------------------------------------------------------------------ */
-      /* 2. COMPOSITION DU NOM                                               */
-      /* ------------------------------------------------------------------ */
-
       const chars = splitChars(wordmark.current);
 
-      if (chars.length) {
-        if (reduced) {
-          gsap.set(chars, { yPercent: 0, opacity: 1 });
-        } else {
-          /*
-            `fromTo` et NON `set(...)` + `to(...)` : avec deux appels séparés,
-            l'état fermé posé par `set` devient aussi la valeur d'arrivée du
-            tween quand celui-ci est créé alors que le déclencheur est déjà
-            franchi — les lettres restaient bloquées 198 px plus bas, à cheval
-            sur l'accroche. `fromTo` fixe explicitement départ ET arrivée.
+      if (!chars.length) return;
 
-            Le déclencheur vise le NOM lui-même et non le footer entier : ce
-            dernier est très haut, son sommet franchissait le seuil bien avant
-            que le mot n'entre à l'écran.
-          */
-          gsap.fromTo(
-            chars,
-            { yPercent: 110, opacity: 0 },
-            {
-              yPercent: 0,
-              opacity: 1,
-              duration: 1.1,
-              ease: "expo.out",
-              stagger: 0.03,
-              immediateRender: true,
-              scrollTrigger: {
-                trigger: wordmark.current,
-                start: "top 95%",
-                once: true,
-              },
-            }
-          );
-        }
+      if (reduced) {
+        gsap.set(chars, { yPercent: 0, opacity: 1 });
+        return;
       }
 
+      /*
+        `fromTo` et NON `set(...)` + `to(...)` : avec deux appels séparés,
+        l'état fermé posé par `set` devient aussi la valeur d'arrivée du tween
+        lorsque celui-ci est créé alors que le déclencheur est déjà franchi —
+        les lettres restent alors bloquées en position basse.
+
+        Le déclencheur vise le NOM lui-même et non le footer entier : ce
+        dernier est très haut, son sommet franchirait le seuil bien avant que
+        le mot n'entre à l'écran.
+      */
+      gsap.fromTo(
+        chars,
+        { yPercent: 110, opacity: 0 },
+        {
+          yPercent: 0,
+          opacity: 1,
+          duration: 1.1,
+          ease: "expo.out",
+          stagger: 0.03,
+          immediateRender: true,
+          /*
+            `top bottom` et non `top 95%` : le pied de page fait toute la
+            hauteur de l'écran, et sur mobile le nom se retrouve DÉJÀ au-dessus
+            de la ligne des 95 % quand on arrive en bas de page — le
+            déclencheur n'était jamais franchi et les lettres restaient
+            invisibles. Avec `top bottom` il suffit que le mot entre par le bas
+            de la fenêtre.
+          */
+          scrollTrigger: {
+            trigger: wordmark.current,
+            start: "top bottom",
+            once: true,
+          },
+        }
+      );
       /* ------------------------------------------------------------------ */
-      /* 3. LÉGÈRE DÉRIVE DU NOM                                             */
+      /* 3. AJUSTEMENT DU NOM À LA LARGEUR                                   */
       /* ------------------------------------------------------------------ */
 
       /*
-       * Le nom ouvre désormais le footer : il n'est plus rogné par le bas de
-       * page, donc plus de décalage vertical permanent (l'ancien yPercent 22
-       * → 12 servait uniquement à ce cadrage). On garde une dérive minime au
-       * scroll pour que le bloc ne soit pas complètement figé.
-       *
-       * Le mouvement reste porté par GSAP et NON par une classe Tailwind :
-       * les deux écriraient `transform` sur le même élément, et l'inline de
-       * GSAP écraserait la classe.
+       * On mesure le mot à une taille de référence, puis on applique le
+       * rapport largeur_disponible / largeur_mesurée. C'est fiable quels que
+       * soient la police, la marge ou le point de rupture — contrairement à
+       * une valeur en `vw` qu'il faut deviner pour chaque écran.
        */
-      /*
-       * Pas de dérive verticale sur le nom : un `yPercent` déplace l'élément
-       * SANS réserver d'espace dans le flux, et le mot venait alors recouvrir
-       * l'accroche placée juste dessous. Le bloc reste donc calé, et c'est la
-       * composition lettre par lettre (§2) qui porte l'animation.
-       */
+      const fitWordmark = () => {
+        const node = wordmark.current;
+        if (!node || !node.parentElement) return;
+
+        /*
+          Largeur RÉELLEMENT disponible pour le texte : `clientWidth` du parent
+          inclut son rembourrage, que les lettres ne peuvent pas occuper. On le
+          retranche, sans quoi le mot dépasse systématiquement d'environ 5 à
+          10 %.
+        */
+        const parent = node.parentElement;
+        const pcs = getComputedStyle(parent);
+        const available =
+          parent.clientWidth -
+          parseFloat(pcs.paddingLeft) -
+          parseFloat(pcs.paddingRight);
+        if (!available || available <= 0) return;
+
+        /*
+          On mesure l'ENCRE réelle (du bord gauche de la 1re lettre au bord
+          droit de la dernière) et non `scrollWidth` : `splitChars` a déjà
+          emballé chaque caractère dans un span inline-block, et la largeur de
+          défilement du conteneur ne reflète alors plus celle du texte.
+
+          Les lettres sont translatées verticalement pendant l'animation, ce
+          qui ne change pas leur position horizontale : la mesure reste juste.
+        */
+        const glyphs = node.querySelectorAll(".char");
+        const REF = 100;
+        node.style.fontSize = `${REF}px`;
+
+        let measured;
+        if (glyphs.length) {
+          const first = glyphs[0].getBoundingClientRect();
+          const last = glyphs[glyphs.length - 1].getBoundingClientRect();
+          measured = last.right - first.left;
+        } else {
+          measured = node.scrollWidth;
+        }
+        if (!measured) return;
+
+        // 0.995 : un cheveu de marge pour que le point final ne rase pas le bord
+        const next = Math.min((available / measured) * REF * 0.995, 336);
+        node.style.fontSize = `${next}px`;
+      };
+
+      fitWordmark();
+      // les polices web changent la largeur des glyphes : on remesure après
+      document.fonts?.ready.then(fitWordmark);
+      window.addEventListener("resize", fitWordmark);
+      cleanup = () => window.removeEventListener("resize", fitWordmark);
     }, root);
 
-    return () => ctx.revert();
+    return () => {
+      cleanup?.();
+      ctx.revert();
+    };
   }, []);
 
   const year = new Date().getFullYear();
@@ -143,189 +149,121 @@ export default function Footer() {
     <footer
       ref={root}
       id="contact"
-      className="footer-invert relative overflow-hidden bg-ivoire pb-10 pt-16 md:pt-20"
+      className="relative flex flex-col overflow-hidden bg-bronze px-5 py-10 text-ivoire md:px-10 md:py-12"
     >
-      {/* calque d'inversion : c'est son opacité qui bascule, pas une variable */}
-      <div
-        ref={veil}
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-charbon opacity-0"
-      />
-
-      {/*
-        Nom géant EN OUVERTURE du footer : c'est la première chose qu'on lit,
-        le reste du contenu vient se ranger dessous.
-
-        `clamp()` sur mesure plutôt que `text-giant` : le mot fait 14
-        caractères, il doit se caler sur la LARGEUR disponible (vw) et non sur
-        une échelle pensée pour un mot court, sinon il déborde du cadre.
-
-        Quand le nom était en BAS de page, le conteneur le rognait volontairement
-        (`overflow-hidden` + `leading-[0.8]`), ce qui coupait les glyphes une
-        fois le bloc remonté en tête. Les deux sont retirés : l'entrée des
-        lettres est masquée par leur opacité (0 → 1), pas par un rognage.
-      */}
-      <div className="relative mb-16 px-2 md:mb-20">
-        <h2
-          ref={wordmark}
-          aria-label="Nova Business"
-          className="whitespace-nowrap pb-[0.08em] text-center font-black lowercase leading-[1] tracking-[-0.04em] text-[color:var(--f-fg)]"
-          style={{ fontSize: "clamp(2.5rem, 12.5vw, 15rem)" }}
-        >
-          nova business.
-        </h2>
-      </div>
-
-      <div className="edge relative">
-        {/* ---- Accroche ---- */}
-        <div className="max-w-4xl">
-          <span className="footer-accent-cycle eyebrow mb-6 block text-[color:var(--f-accent)]">
-            Prendre contact
-          </span>
-          <TypedHeading
-            as="h2"
-            className="text-d2 font-medium lowercase leading-[0.95] text-[color:var(--f-fg)]"
-            text="parlons de votre projet"
-            html={
-              'parlons de <span class="font-display italic text-[color:var(--f-accent)]">votre projet</span>'
-            }
-          />
-          <p
-            data-reveal="fade"
-            data-reveal-delay="0.15"
-            className="mt-6 max-w-md text-[15px] leading-relaxed text-[color:var(--f-muted)]"
-          >
-            Un mail, trois lignes sur votre besoin. Réponse sous 24 h ouvrées.
-          </p>
-        </div>
-
-        {/* ---- Email en grand ---- */}
+      {/* ---------------- HAUT : logo + actions ---------------- */}
+      <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
+        {/*
+          Le logo fourni est un JPEG (fond ivoire, pas de transparence) : posé
+          tel quel sur le bronze il afficherait un rectangle blanc. On l'assume
+          donc comme une CARTE ivoire — c'est net et volontaire, là où un
+          détourage approximatif se verrait.
+        */}
         <a
-          href={`mailto:${contact.email}`}
+          href="#top"
           data-cursor="hover"
-            className="group mt-12 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-3 border-t border-[color:var(--f-line)] pt-8 text-[color:var(--f-fg)]"
+          aria-label="Nova Business, retour en haut"
+          className="inline-block w-fit rounded-[4px] bg-ivoire p-3 transition-transform duration-500 ease-nova hover:-translate-y-0.5 md:p-4"
         >
-          {/* `break-all` en secours : l'adresse ne doit jamais déborder */}
-          <span className="break-all text-xl font-semibold tracking-tight transition-transform duration-700 ease-nova group-hover:translate-x-2 sm:text-3xl md:text-5xl">
-            {contact.email}
-          </span>
-          <span
-            aria-hidden="true"
-            className="footer-accent-cycle shrink-0 font-mono text-xl text-[color:var(--f-accent)] transition-transform duration-700 ease-nova group-hover:translate-x-1 md:text-3xl"
-          >
-            ↗
-          </span>
+          <img
+            src="/Logo.jpg"
+            alt="Nova Business"
+            className="block h-9 w-auto md:h-12"
+          />
         </a>
 
-        {/* ---- Colonnes ---- */}
-        <div className="mt-16 grid gap-12 border-t border-[color:var(--f-line)] pt-14 md:grid-cols-12">
-          <div className="md:col-span-5">
-            <span
-              data-reveal="fade"
-              className="eyebrow mb-5 block text-[color:var(--f-faint)]"
-            >
-              Téléphone
-            </span>
-            <a
-              href={`tel:${contact.phone.replace(/\s/g, "")}`}
-              data-cursor="hover"
-              className="link-underline font-mono text-[15px] text-[color:var(--f-muted)] transition-colors duration-500 hover:text-[color:var(--f-fg)]"
-            >
-              {contact.phone}
-            </a>
-
-            <div className="mt-9 flex flex-wrap gap-3">
-              <MagneticButton href={`mailto:${contact.email}`} variant="solid">
-                démarrer un projet
-              </MagneticButton>
-              <MagneticButton
-                href="#realisations"
-                variant="outline"
-                className="!border-[color:var(--f-line)] !text-[color:var(--f-fg)] hover:!border-[color:var(--f-accent)] hover:!bg-[color:var(--f-accent)] hover:!text-ivoire"
-              >
-                voir le book
-              </MagneticButton>
-            </div>
-          </div>
-
-          <div className="md:col-span-4">
-            <span
-              data-reveal="fade"
-              className="eyebrow mb-5 block text-[color:var(--f-faint)]"
-            >
-              Adresse
-            </span>
-            <address
-              data-reveal="lines"
-              data-reveal-delay="0.1"
-              className="not-italic text-[15px] leading-relaxed text-[color:var(--f-muted)]"
-            >
-              {contact.address.map((line) => (
-                <span key={line} className="block">
-                  {line}
-                </span>
-              ))}
-            </address>
-          </div>
-
-          <div className="md:col-span-3">
-            <span
-              data-reveal="fade"
-              className="eyebrow mb-5 block text-[color:var(--f-faint)]"
-            >
-              Suivre
-            </span>
-            <ul data-reveal="lines" data-reveal-delay="0.1" className="flex flex-col">
-              {contact.socials.map((s) => (
-                <li key={s.label}>
-                  <a
-                    href={s.href}
-                    data-cursor="hover"
-                    className="group flex items-center justify-between border-b border-[color:var(--f-line)] py-3 text-[15px] text-[color:var(--f-muted)] transition-colors duration-500 hover:text-[color:var(--f-fg)]"
-                  >
-                    <span className="transition-transform duration-500 ease-nova group-hover:translate-x-1">
-                      {s.label}
-                    </span>
-                    <span
-                      aria-hidden="true"
-                      className="footer-accent-cycle -translate-x-1 font-mono text-xs text-[color:var(--f-accent)] opacity-0 transition-all duration-500 ease-nova group-hover:translate-x-0 group-hover:opacity-100"
-                    >
-                      →
-                    </span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        {/* ---- Barre légale ---- */}
-        <div className="mt-14 flex flex-wrap items-center justify-between gap-x-6 gap-y-4 border-t border-[color:var(--f-line)] py-7 font-mono text-[11px] uppercase tracking-[0.16em] text-[color:var(--f-faint)]">
-          <span>© {year} Nova Business</span>
-          <span className="flex gap-6">
-            <a href="/mentions-legales" className="link-underline">
-              Mentions légales
-            </a>
-            <a href="/confidentialite" className="link-underline">
-              Confidentialité
-            </a>
-          </span>
+        <div className="flex flex-col gap-3 sm:flex-row md:items-center">
           <a
-            href="#top"
+            href="#realisations"
             data-cursor="hover"
-            className="group flex items-center gap-2 transition-colors duration-500 hover:text-[color:var(--f-fg)]"
+            className="rounded-full border border-ivoire/70 px-7 py-3 text-center text-[13px] font-bold lowercase transition-colors duration-500 ease-nova hover:border-ivoire hover:bg-ivoire hover:text-bronze"
           >
-            retour en haut
-            <span
-              aria-hidden="true"
-              className="transition-transform duration-500 ease-nova group-hover:-translate-y-1"
-            >
-              ↑
-            </span>
+            nos réalisations
+          </a>
+          <a
+            href={`mailto:${contact.email}`}
+            data-cursor="hover"
+            className="rounded-full bg-ivoire px-7 py-3 text-center text-[13px] font-bold lowercase text-bronze transition-colors duration-500 ease-nova hover:bg-blanc"
+          >
+            parlons-en
           </a>
         </div>
       </div>
 
+      {/* ---------------- COORDONNÉES ---------------- */}
+      {/*
+        La hauteur du pied de page est dictée par son CONTENU (pas de
+        `min-h-[100svh]`) : sur grand écran cela évitait un large vide au
+        milieu, le bloc était étiré pour rien. Les espacements fixes donnent un
+        rythme régulier d'un écran à l'autre.
+      */}
+      <div className="grid gap-8 pt-24 text-[13px] font-bold lowercase leading-relaxed sm:grid-cols-2 md:pt-32">
+        <div>
+          <p className="mb-4 text-ivoire/55">adresse</p>
+          <address className="not-italic">
+            {contact.address.map((line) => (
+              <span key={line} className="block">
+                {line}
+              </span>
+            ))}
+          </address>
+        </div>
+
+        <div className="sm:justify-self-end sm:text-right">
+          <p className="mb-4 text-ivoire/55">contact</p>
+          <a
+            href={`tel:${contact.phone.replace(/\s/g, "")}`}
+            data-cursor="hover"
+            className="block transition-opacity duration-500 hover:opacity-70"
+          >
+            {contact.phone}
+          </a>
+          <a
+            href={`mailto:${contact.email}`}
+            data-cursor="hover"
+            className="block transition-opacity duration-500 hover:opacity-70"
+          >
+            {contact.email}
+          </a>
+        </div>
+      </div>
+
+      {/* ---------------- NOM GÉANT ---------------- */}
+      {/*
+        Le nom est la pièce maîtresse : gras plein (`font-black`), interlettrage
+        resserré et taille calée sur la LARGEUR de l'écran pour qu'il remplisse
+        la ligne d'un bord à l'autre.
+
+        `min(…vw, …rem)` plutôt que `clamp()` : au-delà d'un très grand écran on
+        plafonne, mais en dessous le mot suit fidèlement la largeur — il n'y a
+        jamais de « trou » à droite.
+      */}
+      <h2
+        ref={wordmark}
+        aria-label="Nova Business"
+        /*
+          La taille est mesurée en JS (voir §3 de l'effet) et non fixée en
+          `vw` : la marge latérale change selon le point de rupture, donc une
+          échelle en `vw` qui tenait sur mobile débordait sur tablette. On part
+          de la largeur RÉELLE du conteneur, le mot remplit toujours la ligne
+          au pixel près.
+        */
+        className="mt-10 w-full whitespace-nowrap pb-[0.04em] font-black leading-[0.78] tracking-[-0.045em]"
+      >
+        nova business.
+      </h2>
+
+      {/* ---------------- BARRE DE BAS DE PAGE ---------------- */}
+      <div className="mt-6 flex items-center justify-between border-t border-ivoire/20 pt-5 text-[12px] font-bold lowercase text-ivoire/70">
+        <span>@nova {year}</span>
+        <a
+          href="#top"
+          data-cursor="hover"
+          className="transition-opacity duration-500 hover:opacity-100 hover:text-ivoire"
+        >
+          retour en haut ↑
+        </a>
+      </div>
     </footer>
   );
 }

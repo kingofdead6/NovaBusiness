@@ -6,9 +6,10 @@ import Typed from "typed.js";
  *
  *   <TypedHeading as="h2" text="parlons de votre projet" />
  *
- * Le texte n'est frappé qu'une fois, quand le titre entre dans l'écran.
- * Avant ça la boîte garde sa hauteur (voir `.typed-slot`), sinon la page
- * sauterait au moment où les lettres arrivent.
+ * Le texte se retape à CHAQUE passage dans l'écran : quand le titre sort
+ * du viewport il est effacé, et il retape dès qu'il revient.
+ * La boîte garde toujours sa hauteur (voir `.typed-slot`), sinon la page
+ * sauterait au moment où les lettres arrivent ou disparaissent.
  */
 export default function TypedHeading({
   as: Tag = "h2",
@@ -43,7 +44,8 @@ export default function TypedHeading({
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    // mouvement réduit : on affiche le titre d'emblée, sans frappe
+    // mouvement réduit : on affiche le titre d'emblée, sans frappe, et on
+    // ne branche rien au scroll (pas de retape non plus)
     if (reduced) {
       if (html) hostEl.innerHTML = html;
       else hostEl.textContent = text;
@@ -52,9 +54,9 @@ export default function TypedHeading({
     }
 
     /*
-      On fige la hauteur du titre AVANT la frappe, à partir du fantôme rendu
-      à sa taille définitive. Sans ça la page remonte à chaque retour à la
-      ligne gagné par le texte qui s'allonge.
+      On fige la hauteur du titre à partir du fantôme rendu à sa taille
+      définitive. Sans ça la page bouge à chaque retour à la ligne gagné
+      par le texte qui s'allonge ou disparaît.
     */
     const lockHeight = () => {
       const ghost = slotEl.querySelector(".typed-ghost");
@@ -69,25 +71,39 @@ export default function TypedHeading({
     window.addEventListener("resize", lockHeight);
 
     let typed;
+
+    // (re)lance la frappe depuis zéro
+    const startTyping = () => {
+      typed?.destroy();
+      hostEl.innerHTML = ""; // on repart d'un champ vide à chaque entrée
+      slotEl.dataset.typedState = "typing";
+      typed = new Typed(hostEl, {
+        strings: [source],
+        typeSpeed: speed,
+        startDelay,
+        contentType,
+        showCursor: cursor,
+        cursorChar: "|",
+        loop: false,
+        onComplete: () => {
+          slotEl.dataset.typedState = "done";
+        },
+      });
+    };
+
+    // efface le texte tapé, prêt à retaper au prochain passage
+    const resetTyping = () => {
+      typed?.destroy();
+      typed = undefined;
+      hostEl.innerHTML = "";
+      slotEl.dataset.typedState = "idle";
+    };
+
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          io.disconnect();
-
-          slotEl.dataset.typedState = "typing";
-          typed = new Typed(hostEl, {
-            strings: [source],
-            typeSpeed: speed,
-            startDelay,
-            contentType,
-            showCursor: cursor,
-            cursorChar: "|",
-            loop: false,
-            onComplete: () => {
-              slotEl.dataset.typedState = "done";
-            },
-          });
+          if (entry.isIntersecting) startTyping();
+          else resetTyping();
         });
       },
       { threshold: 0.25 }
@@ -111,10 +127,10 @@ export default function TypedHeading({
     >
       {/*
         Le fantôme réserve la place du titre complet (donc aucun saut de mise
-        en page pendant la frappe). Il est masqué à l'oeil ET aux lecteurs
-        d'écran — c'est l'aria-label du titre qui porte le texte accessible.
+        en page pendant la frappe ou l'effacement). Il est masqué à l'oeil ET
+        aux lecteurs d'écran — c'est l'aria-label du titre qui porte le texte
+        accessible.
       */}
-      {/* le fantôme suit la même règle : HTML seulement si `html` est fourni */}
       {html ? (
         <span
           className="typed-ghost"

@@ -97,25 +97,6 @@
   }
 
   /*
-   * PIED DE PAGE — inversion clair → sombre.
-   *
-   * `--ink` (0 → 1) est écrit par le composant au fil du scroll. Toutes les
-   * couleurs en sont dérivées par `color-mix`, donc une seule valeur anime
-   * l'ensemble du bloc. On ne demande jamais à GSAP d'interpoler une couleur
-   * dans une custom property : il en est incapable, c'est ce qui cassait la
-   * bascule auparavant.
-   */
-  .footer-invert {
-    --ink: 0;
-    --f-fg: color-mix(in srgb, var(--ivoire) calc(var(--ink) * 100%), var(--charbon));
-    --f-accent: color-mix(in srgb, var(--dore) calc(var(--ink) * 100%), var(--bronze));
-    --f-muted: color-mix(in srgb, var(--f-fg) 62%, transparent);
-    --f-faint: color-mix(in srgb, var(--f-fg) 38%, transparent);
-    --f-line: color-mix(in srgb, var(--f-fg) 14%, transparent);
-    color: var(--f-fg);
-  }
-
-  /*
    * CADRE STICKY PLEIN ÉCRAN.
    *
    * `100vh` d'abord, `100svh` ensuite : sur mobile la barre d'URL qui se

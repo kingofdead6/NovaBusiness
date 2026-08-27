@@ -6,47 +6,12 @@ import anime from "animejs/lib/anime.es.js";
 
 import { splitChars } from "../../lib/text";
 import LiquidVeil from "../LiquidVeil";
-import building from "../../assets/takeover/building.png";
-import flower from "../../assets/takeover/flower.png";
+import building from "../../assets/takeover/takeover1.svg";
+import flower from "../../assets/takeover/takeover2.svg";
+import centerArt from "../../assets/takeover/takeover3.svg";
 
 gsap.registerPlugin(ScrollTrigger);
 
-/**
- * SECTION 03 — RECOUVREMENT LIQUIDE
- *
- * Première moitié d'un diptyque : Takeover recouvre l'écran de matière
- * charbon, Values EST cette matière une fois posée. La dernière couche du
- * voile (#1C1C1C) est exactement `bg-charbon` : le raccord entre les deux
- * sections est donc invisible, et ce qui commence ici se termine là-bas.
- *
- * Composition — deux couches superposées dans le cadre sticky, qui se
- * relaient au scroll :
- *
- *   ┌───────────────────────────────────────────┐      ┌──────────────────────┐
- *   │  eyebrow                                  │      │  eyebrow             │
- *   │                                           │  →   │  nova.      ← replié │
- *   │                 nova.                     │      │ [img] description    │
- *   └───────────────────────────────────────────┘      └──────────────────────┘
- *        titre plein cadre                          il RESTE, en petit, au-dessus
- *
- * DÉROULÉ (celui de la référence vidéo) :
- *
- *   1. FOND CLAIR   — on entre sur `bg-ivoire`, le voile est encore hors cadre
- *   2. COULÉE       — la matière monte et recouvre l'écran ; le titre se
- *                     révèle dessus une fois la couverture faite
- *   3. LE TITRE SE REPLIE — il se réduit et remonte se poser sous l'eyebrow,
- *                     où il RESTE affiché jusqu'à la fin de la section
- *   4. DESCRIPTION  — elle entre par la droite, et À SA HAUTEUR les deux
- *                     visuels apparaissent aux bords gauche et droit
- *
- * Les visuels sont des PNG détourés, posés sans cadre ni fond. Ils ENTRENT EN
- * PIVOTANT : le pivot est placé loin au-dessus d'eux, si bien que la rotation
- * décrit un arc large qui les amène du hors-champ jusqu'à leur place. Leur
- * ancrage CSS, lui, ne bouge jamais.
- *
- * C'est le voile — et lui seul — qui fait passer le fond du clair au sombre.
- * La <section> reste donc `bg-ivoire` : c'est ce qu'on voit à l'entrée.
- */
 
 /* Fenêtre de progression du voile pendant laquelle le texte se révèle. */
 const REVEAL_START = 0.52;
@@ -80,6 +45,7 @@ export default function Takeover() {
       const descLayer = q("[data-desc-layer]");
       const leftArt = q("[data-art-left]");
       const rightArt = q("[data-art-right]");
+      const centerArtEl = q("[data-art-center]");
 
       if (!word || !sub) return;
 
@@ -102,11 +68,12 @@ export default function Takeover() {
        * La couche description part masquée : elle n'entre qu'une fois le titre
        * sorti.
        *
-       * Les visuels PIVOTENT POUR ENTRER. Leur pivot est placé très haut
-       * au-dessus d'eux (`transformOrigin: 50% -140%`) : à cette distance, une
-       * rotation décrit un arc large, et c'est cet arc — pas une translation —
-       * qui les fait venir du hors-champ jusqu'à leur place. Le point d'ancrage
-       * reste rigoureusement fixe ; seule l'amplitude de départ change.
+       * Les visuels de bord (desktop) PIVOTENT POUR ENTRER. Leur pivot est
+       * placé très haut au-dessus d'eux (`transformOrigin: 50% -140%`) : à
+       * cette distance, une rotation décrit un arc large, et c'est cet arc —
+       * pas une translation — qui les fait venir du hors-champ jusqu'à leur
+       * place. Le point d'ancrage reste rigoureusement fixe ; seule
+       * l'amplitude de départ change.
        *
        * L'amplitude est réduite sur téléphone : à largeur étroite, un arc de
        * 38° projette l'image bien plus loin (le rayon est le même, mais l'écran
@@ -131,6 +98,21 @@ export default function Takeover() {
         gsap.set(rightArt, { opacity: 0, rotate: SWING, transformOrigin: "50% -140%" });
       }
 
+      /*
+       * Le visuel central (mobile uniquement) n'a pas besoin d'un pivot
+       * excentré : il est seul au milieu du cadre, donc son entrée est un
+       * simple pop-and-settle sur son propre centre — un arc n'ajouterait
+       * rien puisqu'il n'y a pas de hors-champ latéral à traverser.
+       */
+      if (centerArtEl) {
+        gsap.set(centerArtEl, {
+          opacity: 0,
+          scale: 0.6,
+          rotate: -10,
+          transformOrigin: "50% 50%",
+        });
+      }
+
       /* ------------------------------------------------------------------ */
       /* MOUVEMENT RÉDUIT — tout est posé, rien ne bouge                     */
       /* ------------------------------------------------------------------ */
@@ -146,8 +128,8 @@ export default function Takeover() {
         if (titleLayer) gsap.set(titleLayer, { paddingTop: "7vh" });
         gsap.set(word, { scale: 0.3 });
         if (descLayer) gsap.set(descLayer, { opacity: 1 });
-        [leftArt, rightArt].forEach((el) => {
-          if (el) gsap.set(el, { rotate: 0, opacity: 1 });
+        [leftArt, rightArt, centerArtEl].forEach((el) => {
+          if (el) gsap.set(el, { rotate: 0, opacity: 1, scale: 1 });
         });
         return;
       }
@@ -206,7 +188,8 @@ export default function Takeover() {
        *   0.00 → 0.62  la coulée monte, le titre se révèle dessus
        *                (piloté par `updateText`, pas par cette timeline)
        *   0.62 → 0.72  LE TITRE S'ÉLÈVE ET SORT par le haut
-       *   0.66 → 0.88  les visuels PIVOTENT depuis le hors-champ, texte entre
+       *   0.66 → 0.88  les visuels entrent (pivot sur desktop, pop au centre
+       *                sur mobile), texte entre
        *   0.86 → 1.00  maintien : tout est lisible avant le passage à Values
        */
 
@@ -259,9 +242,10 @@ export default function Takeover() {
       }
 
       /*
-       * Les visuels ENTRENT EN PIVOTANT : ils partent à ~38° — donc bien
-       * au-delà des bords — et l'arc les amène jusqu'à leur position de repos.
-       * Le fondu accompagne le mouvement au lieu de le remplacer.
+       * Les visuels de bord (desktop) ENTRENT EN PIVOTANT : ils partent à
+       * ~38° — donc bien au-delà des bords — et l'arc les amène jusqu'à leur
+       * position de repos. Le fondu accompagne le mouvement au lieu de le
+       * remplacer.
        */
       [
         [leftArt, 0.66],
@@ -279,6 +263,25 @@ export default function Takeover() {
           at
         );
       });
+
+      /*
+       * Le visuel central (mobile) POP depuis un léger retrait/rotation avec
+       * un rebond en fin de course (`back.out`) : seul au milieu du cadre, il
+       * peut se permettre une entrée plus affirmée que les pièces de bord.
+       */
+      if (centerArtEl) {
+        relay.to(
+          centerArtEl,
+          {
+            rotate: 0,
+            scale: 1,
+            opacity: 1,
+            ease: "back.out(1.6)",
+            duration: 0.24,
+          },
+          0.67
+        );
+      }
 
       /* le filet se trace, puis le paragraphe monte */
       if (rule) {
@@ -308,24 +311,8 @@ export default function Takeover() {
       aria-label="Nova Business en un mot"
     >
       {/* `h-stage` : 100vh avec repli 100svh — voir index.css */}
-      <div className="sticky top-0 h-stage overflow-hidden">
+      <div className="sticky top-0 h-stage ">
         <LiquidVeil onProgress={updateText} />
-
-        {/*
-          COMPOSITION — deux couches indépendantes dans le cadre sticky.
-
-          Elles se succèdent au scroll comme dans la référence : le TITRE
-          occupe l'écran une fois la coulée posée, puis s'élève et sort par le
-          haut ; la DESCRIPTION prend le relais, flanquée des deux visuels qui
-          arrivent EXACTEMENT à sa hauteur, en débord des bords gauche et
-          droit.
-
-          Deux couches superposées plutôt qu'une grille en colonne : chacune
-          est centrée sur le cadre pour son propre compte, donc la sortie de
-          l'une n'entraîne jamais l'autre.
-        */}
-
-        {/* ===================== EYEBROW ===================== */}
 
         <p
           data-eyebrow
@@ -372,26 +359,24 @@ export default function Takeover() {
 
         {/* ============= DESCRIPTION + VISUELS DE BORD ============= */}
         {/*
-          Les deux visuels sont des PNG détourés : ils sont posés TELS QUELS,
-          sans cadre, sans fond, sans rognage ni dégradé. Leur ancrage est fixe
-          (`top-[34%]`) ; c'est la ROTATION, autour d'un pivot très haut placé,
-          qui les fait entrer depuis le hors-champ et se poser à cet endroit.
+          Les visuels de bord (gauche/droite) sont réservés au desktop
+          (`hidden md:block`) : deux PNG détourés posés tels quels, sans
+          cadre ni fond, ancrés sur les côtés. Sur mobile, un visuel CENTRAL
+          UNIQUE (différent des deux autres) prend leur place — voir plus bas.
         */}
 
         <div
           data-desc-layer
           className="absolute inset-0 z-10 flex items-center will-change-transform"
         >
-          {/* -------------- VISUEL GAUCHE -------------- */}
+          {/* -------------- VISUEL GAUCHE (desktop uniquement) -------------- */}
 
           <figure
             data-art-left
             aria-hidden="true"
             className="
-              pointer-events-none absolute origin-top will-change-transform
-              -left-[10%] top-[58%] w-[52vw] opacity-70
-              sm:-left-[6%] sm:w-[46vw]
-              md:left-0 md:top-[34%] md:w-[32vw] md:max-w-[300px] md:opacity-100
+              pointer-events-none absolute hidden origin-top will-change-transform
+              md:block md:left-0 md:top-[34%] md:w-[32vw] md:max-w-[300px] md:opacity-100
               lg:max-w-[380px]
               xl:max-w-[430px]
             "
@@ -404,22 +389,41 @@ export default function Takeover() {
             />
           </figure>
 
-          {/* -------------- VISUEL DROIT -------------- */}
+          {/* -------------- VISUEL DROIT (desktop uniquement) -------------- */}
 
           <figure
             data-art-right
             aria-hidden="true"
             className="
-              pointer-events-none absolute origin-top will-change-transform
-              -right-[8%] top-[68%] w-[46vw] opacity-70
-              sm:-right-[4%] sm:w-[42vw]
-              md:right-0 md:top-[34%] md:w-[28vw] md:max-w-[280px] md:opacity-100
+              pointer-events-none absolute hidden origin-top will-change-transform
+              md:block md:right-0 md:top-[34%] md:w-[28vw] md:max-w-[280px] md:opacity-100
               lg:max-w-[340px]
               xl:max-w-[390px]
             "
           >
             <img
               src={flower}
+              alt=""
+              loading="lazy"
+              className="block w-full"
+            />
+          </figure>
+
+          {/* -------------- VISUEL CENTRAL (mobile uniquement) -------------- */}
+
+          <figure
+            data-art-center
+            aria-hidden="true"
+            className="
+              pointer-events-none absolute left-1/2 top-[40%] block
+              w-[52vw] max-w-[240px] -translate-x-1/2 -translate-y-1/2
+              opacity-90 will-change-transform
+              drop-shadow-[0_20px_36px_rgba(28,28,28,0.32)]
+              md:hidden
+            "
+          >
+            <img
+              src={centerArt}
               alt=""
               loading="lazy"
               className="block w-full"
