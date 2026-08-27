@@ -3,7 +3,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { contact } from "../../data/site";
 import { splitChars } from "../../lib/text";
-import logo from "../../assets/logo.jpg"
+import logo from "../../assets/Logo.jpg"
 gsap.registerPlugin(ScrollTrigger);
 
 
