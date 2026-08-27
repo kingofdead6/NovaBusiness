@@ -3,22 +3,10 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { contact } from "../../data/site";
 import { splitChars } from "../../lib/text";
-
+import logo from "../../assets/logo.jpg"
 gsap.registerPlugin(ScrollTrigger);
 
-/**
- * SECTION 12 — PIED DE PAGE
- *
- * Bloc plein bronze, épuré : le logo et deux boutons en haut, l'adresse en
- * colonne, puis le nom géant en italique qui occupe toute la largeur et une
- * barre de bas de page (année + email).
- *
- * Pas de titre d'accroche, pas de liens sociaux, pas de barre légale : la
- * composition repose entièrement sur le contraste d'échelle entre les petites
- * mentions et le mot géant.
- *
- * Le nom se compose lettre par lettre à l'entrée dans l'écran (`splitChars`).
- */
+
 export default function Footer() {
   const root = useRef(null);
   const wordmark = useRef(null);
@@ -166,7 +154,7 @@ export default function Footer() {
           className="inline-block w-fit rounded-[4px] bg-ivoire p-3 transition-transform duration-500 ease-nova hover:-translate-y-0.5 md:p-4"
         >
           <img
-            src="/Logo.jpg"
+            src={logo}
             alt="Nova Business"
             className="block h-9 w-auto md:h-12"
           />
