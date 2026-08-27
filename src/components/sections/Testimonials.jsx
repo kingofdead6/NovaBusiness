@@ -92,10 +92,23 @@ export default function Testimonials() {
                     setI(idx);
                     setAuto(false);
                   }}
-                  className={`h-[3px] transition-all duration-500 ease-nova ${
-                    idx === i ? "w-14 bg-dore" : "w-7 bg-ivoire/25 hover:bg-ivoire/50"
+                  /*
+                    La barre visible fait 3 px, mais la CIBLE tactile doit
+                    atteindre ~44 px : on ajoute du rembourrage vertical
+                    transparent (`py-5`) et on dessine le trait avec un
+                    pseudo-fond via `before:`.
+                  */
+                  className={`group relative flex h-11 items-center transition-all duration-500 ease-nova ${
+                    idx === i ? "w-14" : "w-7"
                   }`}
-                />
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`block h-[3px] w-full transition-colors duration-500 ${
+                      idx === i ? "bg-dore" : "bg-ivoire/25 group-hover:bg-ivoire/50"
+                    }`}
+                  />
+                </button>
               ))}
             </div>
           </div>

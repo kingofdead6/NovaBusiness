@@ -79,8 +79,13 @@ export default function Process() {
     return () => ctx.revert();
   }, []);
 
+  /*
+   * `overflow-hidden` sur la section : les éclats de <ShardedMedia> se
+   * déplacent hors de leur cadre, et la section les laissait élargir la mise
+   * en page sur mobile.
+   */
   return (
-    <section ref={root} className="relative bg-ivoire py-24 md:py-32">
+    <section ref={root} className="relative overflow-hidden bg-ivoire py-24 md:py-32">
       <div className="edge">
         <div className="grid gap-14 lg:grid-cols-[1fr_0.85fr] lg:gap-20">
           <div>

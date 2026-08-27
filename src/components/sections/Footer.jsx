@@ -211,17 +211,18 @@ export default function Footer() {
 
         <div className="sm:justify-self-end sm:text-right">
           <p className="mb-4 text-ivoire/55">contact</p>
+          {/* `py-2` : porte la cible tactile à ~40 px sans changer le rythme visuel */}
           <a
             href={`tel:${contact.phone.replace(/\s/g, "")}`}
             data-cursor="hover"
-            className="block transition-opacity duration-500 hover:opacity-70"
+            className="block py-3 transition-opacity duration-500 hover:opacity-70"
           >
             {contact.phone}
           </a>
           <a
             href={`mailto:${contact.email}`}
             data-cursor="hover"
-            className="block transition-opacity duration-500 hover:opacity-70"
+            className="block py-3 transition-opacity duration-500 hover:opacity-70"
           >
             {contact.email}
           </a>
@@ -259,7 +260,7 @@ export default function Footer() {
         <a
           href="#top"
           data-cursor="hover"
-          className="transition-opacity duration-500 hover:opacity-100 hover:text-ivoire"
+          className="-my-3 py-3 transition-opacity duration-500 hover:text-ivoire hover:opacity-100"
         >
           retour en haut ↑
         </a>

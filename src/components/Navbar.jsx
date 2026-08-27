@@ -39,7 +39,7 @@ export default function Navbar() {
           <a
             href="#top"
             data-cursor="hover"
-            className="flex items-center gap-2 text-charbon"
+            className="flex items-center gap-2 py-2 text-charbon"
             aria-label="Nova Business, retour en haut"
           >
             <svg viewBox="0 0 120 120" className="h-7 w-7" fill="none" aria-hidden="true">
@@ -63,7 +63,8 @@ export default function Navbar() {
                 key={item.href}
                 href={item.href}
                 data-cursor="hover"
-                className="link-underline text-[13px] font-medium text-charbon/75 transition-colors hover:text-charbon"
+                /* `py-3` : cible tactile confortable, sans changer le rythme visuel */
+                className="link-underline py-3 text-[13px] font-medium text-charbon/75 transition-colors hover:text-charbon"
               >
                 {item.label}
               </a>

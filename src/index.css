@@ -12,6 +12,12 @@
     --blanc: #ffffff;
   }
 
+  /*
+   * NE PAS poser `overflow-x: hidden` sur <html> : cela crée un conteneur de
+   * défilement qui NEUTRALISE `position: sticky`, dont dépendent l'épinglage
+   * de Takeover et l'empilement des cartes de Services. Le débordement
+   * horizontal se règle donc section par section, jamais ici.
+   */
   html {
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;

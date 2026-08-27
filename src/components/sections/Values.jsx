@@ -288,7 +288,7 @@ export default function Values() {
       <div
         data-float="-1"
         aria-hidden="true"
-        className="pointer-events-none absolute -right-6 bottom-10  w-[260px]  lg:block"
+        className="pointer-events-none absolute -right-6 bottom-10 hidden w-[260px] lg:block"
       >
         <img
           src={value2}
@@ -341,7 +341,12 @@ export default function Values() {
           </div>
 
         <div
-          className=" mt-[300px]
+          /*
+            `mt-[300px]` réserve la place de l'oiseau, qui n'existe qu'à partir
+            de `lg` : en dessous, cette marge créait un grand vide au milieu de
+            la section.
+          */
+          className="mt-16 lg:mt-[300px]
             flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-4
             md:grid md:grid-cols-3 md:items-start md:gap-5 md:overflow-visible md:pb-0
             lg:gap-6
@@ -403,17 +408,18 @@ export default function Values() {
                 className="absolute inset-0 -z-10 bg-gradient-to-t from-charbon via-charbon/60 to-charbon/20 transition-opacity duration-700 group-hover:opacity-0 group-focus-visible:opacity-0"
               />
 
-              {/* damier ivoire révélé au survol */}
+              {/*
+                PANNEAU DE SURVOL — fond ivoire plein.
+
+                C'était auparavant un damier façon « transparence » : il n'était
+                visible qu'en filigrane DERRIÈRE l'illustration. Depuis que
+                celle-ci s'efface au survol, le damier apparaissait à nu et
+                ressemblait à une image manquante. Un aplat donne un fond franc
+                et lisible pour le texte.
+              */}
               <div
                 aria-hidden="true"
-                className="absolute inset-0 -z-10 opacity-0 transition-opacity duration-700 group-hover:opacity-100 group-focus-visible:opacity-100"
-                style={{
-                  backgroundColor: "#f5f0e8",
-                  backgroundImage:
-                    "linear-gradient(45deg, #d9d9d9 25%, transparent 25%), linear-gradient(-45deg, #d9d9d9 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #d9d9d9 75%), linear-gradient(-45deg, transparent 75%, #d9d9d9 75%)",
-                  backgroundPosition: "0 0, 0 8px, 8px -8px, -8px 0",
-                  backgroundSize: "16px 16px",
-                }}
+                className="absolute inset-0 -z-10 bg-ivoire opacity-0 transition-opacity duration-500 group-hover:opacity-100 group-focus-visible:opacity-100"
               />
 
               {/* ---------------- INDEX ---------------- */}

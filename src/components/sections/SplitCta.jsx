@@ -78,7 +78,12 @@ export default function SplitCta() {
           style={rightStyle}
           className="relative flex min-h-[340px] flex-col justify-between overflow-hidden rounded-[3px] border border-charbon/10 bg-blanc p-8 will-change-transform md:p-10"
         >
-          <div className="pointer-events-none absolute -right-12 -top-12 w-56 opacity-20">
+          {/*
+            `overflow-hidden` sur le panneau parent rogne déjà ce motif, mais il
+            élargissait tout de même la mise en page sur mobile : on le réduit
+            et on le garde dans le cadre.
+          */}
+          <div className="pointer-events-none absolute -right-6 -top-6 w-40 opacity-20 md:-right-12 md:-top-12 md:w-56">
             <Media src={cta} ratio="2/2" label="Motif / texture" rounded="rounded-full" />
           </div>
 

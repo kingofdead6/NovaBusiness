@@ -270,6 +270,11 @@ export default function Takeover() {
        * peut se permettre une entrée plus affirmée que les pièces de bord.
        */
       if (centerArtEl) {
+        /*
+          Entrée avancée à 0.42 (au lieu de 0.67) : le visuel n'atteignait sa
+          pleine opacité qu'en toute fin de section, si bien qu'on traversait
+          la majeure partie du bloc mobile sur un écran quasi vide.
+        */
         relay.to(
           centerArtEl,
           {
@@ -277,9 +282,9 @@ export default function Takeover() {
             scale: 1,
             opacity: 1,
             ease: "back.out(1.6)",
-            duration: 0.24,
+            duration: 0.3,
           },
-          0.67
+          0.42
         );
       }
 
@@ -414,11 +419,24 @@ export default function Takeover() {
           <figure
             data-art-center
             aria-hidden="true"
+            /*
+              MOBILE — le visuel était trop petit (52vw), calé à 40 % de la
+              hauteur donc À CHEVAL sur le paragraphe, et sa teinte bronze se
+              perdait sur le fond charbon.
+
+              Il est désormais nettement plus grand, descendu SOUS le bloc de
+              texte, et remonté au-dessus du voile (`z-[15]`, entre la scène en
+              z-10 et l'eyebrow en z-20) pour être franchement lisible.
+
+              La largeur est bornée par `34vh` en plus de `70vw` : sur un écran
+              court (375 x 667) une taille purement horizontale débordait par
+              le bas.
+            */
             className="
-              pointer-events-none absolute left-1/2 top-[40%] block
-              w-[52vw] max-w-[240px] -translate-x-1/2 -translate-y-1/2
-              opacity-90 will-change-transform
-              drop-shadow-[0_20px_36px_rgba(28,28,28,0.32)]
+              pointer-events-none absolute left-1/2 top-[64%] z-[15] block
+              w-[min(70vw,290px,30vh)] -translate-x-1/2 -translate-y-1/2
+              will-change-transform
+              drop-shadow-[0_24px_48px_rgba(0,0,0,0.55)]
               md:hidden
             "
           >
