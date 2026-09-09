@@ -11,7 +11,8 @@
     "verify:bans": "node tests/check-bans.mjs",
     "verify:contrast": "node tests/check-contrast.mjs",
     "verify:ground": "node tests/check-ground.mjs",
-    "verify": "npm run verify:palette && npm run verify:bans && npm run verify:contrast && npm run verify:ground"
+    "verify": "npm run verify:palette && npm run verify:bans && npm run verify:contrast && npm run verify:ground && npm run verify:cursor",
+    "verify:cursor": "node tests/check-cursor.mjs"
   },
   "dependencies": {
     "framer-motion": "^11.3.0",
