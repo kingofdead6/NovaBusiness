@@ -25,7 +25,15 @@ const fail=[];
 const check=(name,cond,detail='')=>{ console.log((cond?'PASS':'FAIL')+'  '+name+(detail?'  '+detail:'')); if(!cond) fail.push(name); };
 
 check('aucune animation en boucle', !/animation[^;]*infinite/.test(css));
-check('aucun radial-gradient décoratif', (css.match(/radial-gradient/g)||[]).filter(x=>true).length<=2, '(2 = masque du projecteur)');
+/*
+  Le §09 interdit « les dégradés et fonds décoratifs de remplissage ». Un
+  dégradé employé comme MASQUE n'en est pas un : il ne peint rien, il découpe.
+  On vérifie donc qu'aucun `radial-gradient` ne sert de `background`, plutôt
+  que de compter les occurrences — un simple total devenait faux dès qu'on
+  ajoutait un masque légitime.
+*/
+const gradFond = (css.match(/(?:^|[;{])\s*(?:background|background-image)\s*:[^;}]*radial-gradient/g)||[]);
+check('aucun dégradé décoratif (masques exclus)', gradFond.length===0, gradFond.length?gradFond[0].slice(0,60):'');
 check('aucun text-shadow', !/text-shadow/.test(css));
 
 const dom = await p.evaluate(()=>{

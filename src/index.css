@@ -264,6 +264,94 @@
   }
 
   /* ====================================================================== */
+  /* PLANCHES GRAVÉES                                                       */
+  /* ====================================================================== */
+
+  /*
+    LE PAPIER A ÉTÉ RETIRÉ DE L'IMAGE, PAS DU RENDU.
+
+    Les planches d'origine sont des encres sombres sur papier crème. Trois
+    tentatives par `mix-blend-mode` ont échoué : `screen` laissait un
+    rectangle noir (le papier inversé reste plus clair que l'aubergine),
+    `lighten` verdissait, et un masque sur le parent était neutralisé par le
+    contexte d'empilement que crée le blend sur l'enfant.
+
+    La solution est en amont : un script a converti la CLARTÉ de chaque pixel
+    en canal ALPHA (voir les fichiers `*-trait.png`). Le papier est donc
+    littéralement transparent, et il ne reste qu'un TRAIT SUR RIEN.
+
+    Conséquence : la planche se peint dans la couleur courante et fonctionne
+    sur les deux fonds sans le moindre traitement conditionnel. C'est la règle
+    du §05 — « une seule couleur de trait, deux états » — obtenue par
+    construction plutôt que par réglage.
+  */
+  .engraving-img {
+    /*
+      L'image est blanche sur transparent : `background-color` + masque par
+      l'alpha de l'image la repeignent dans l'encre courante.
+    */
+    -webkit-mask-image: var(--plate);
+    mask-image: var(--plate);
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    background-color: var(--ground-ink);
+    opacity: 0.72;
+  }
+
+  /*
+    LES BORDS SE DISSOLVENT.
+
+    Même détourée, la planche garde le bord franc de son cadrage : un
+    rectangle se devine. Le §03 veut un ciel qui envahit l'écran, pas une
+    vignette posée dessus — et les planches d'origine s'arrêtent elles-mêmes
+    sans cadre au milieu du papier.
+
+    Le dégradé est composé AU MASQUE de la planche : `mask-composite`
+    intersecte les deux, si bien que le trait disparaît progressivement vers
+    les bords au lieu d'être coupé net.
+  */
+  .engraving-img {
+    -webkit-mask-image: var(--plate),
+      radial-gradient(115% 105% at 50% 45%, #000 40%, #00000080 70%, transparent 94%);
+    mask-image: var(--plate),
+      radial-gradient(115% 105% at 50% 45%, #000 40%, #00000080 70%, transparent 94%);
+    -webkit-mask-size: contain, cover;
+    mask-size: contain, cover;
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+
+  /*
+    Repli : sans masque CSS, on affiche l'image telle quelle. Elle est déjà
+    détourée, donc le rendu reste correct — seule la teinte ne suit plus le
+    fond.
+  */
+  @supports not ((mask-image: linear-gradient(#000, #000)) or (-webkit-mask-image: linear-gradient(#000, #000))) {
+    .engraving-img {
+      background-color: transparent;
+    }
+  }
+
+  /*
+    LA PLANCHE EN MARGE.
+
+    Elle déborde volontairement par la droite, comme une planche posée à
+    cheval sur le bord de la table. Les valeurs sont écrites ici plutôt qu'en
+    classes utilitaires : une marge négative en `vw` demande une syntaxe
+    arbitraire fragile, et elle ne s'appliquait pas.
+  */
+  .engraving-marge {
+    top: 34%;
+    right: -14vw;
+    width: 46vw;
+    max-width: 44rem;
+  }
+
+  /* ====================================================================== */
   /* MENU PLEIN ÉCRAN                                                       */
   /* ====================================================================== */
 

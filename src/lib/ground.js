@@ -49,9 +49,23 @@ export function initGround(root = document) {
 
   const el = document.documentElement;
 
+  /*
+    On pose DEUX choses à chaque bascule : le nombre `--ground`, qui peint le
+    fond et l'encre, et un attribut `data-ground-state` en clair.
+
+    L'attribut existe parce que certains traitements ne s'interpolent pas —
+    `mix-blend-mode` sur les planches gravées, par exemple. Ils ont besoin
+    d'un état franc, pas d'une valeur continue. Le cibler par attribut est
+    aussi bien plus robuste que de lire la chaîne du style inline.
+  */
+  const applyGround = (value) => {
+    gsap.set(el, { "--ground": value });
+    el.setAttribute("data-ground-state", value >= 0.5 ? "ciel" : "clair");
+  };
+
   // état de départ : celui que déclare la première section
   const first = VALUE[sections[0].dataset.ground] ?? 0;
-  gsap.set(el, { "--ground": first });
+  applyGround(first);
 
   const triggers = [];
 
@@ -75,8 +89,8 @@ export function initGround(root = document) {
       const t = ScrollTrigger.create({
         trigger: entering,
         start: "top 60%",
-        onEnter: () => gsap.set(el, { "--ground": to }),
-        onLeaveBack: () => gsap.set(el, { "--ground": from }),
+        onEnter: () => applyGround(to),
+        onLeaveBack: () => applyGround(from),
       });
       triggers.push(t);
       continue;
@@ -129,7 +143,7 @@ export function initGround(root = document) {
           La condition étant une simple comparaison sur `v`, elle se rejoue
           d'elle-même à l'envers quand on remonte.
         */
-        gsap.set(el, { "--ground": v >= 1 ? to : from });
+        applyGround(v >= 1 ? to : from);
       },
     });
 

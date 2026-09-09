@@ -1,7 +1,9 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import Plate, { Star } from "../Plate";
+import { Star } from "../Plate";
+import Engraving from "../Engraving";
+import taureau from "../../assets/plates/taureau-trait.png";
 import StarSky from "../StarSky";
 import { splitCharsRich } from "../../lib/text";
 import { palette } from "../../lib/tokens";
@@ -132,11 +134,25 @@ export default function Takeover() {
             </p>
           </div>
 
+          {/*
+            BAYER, URANOMETRIA — LE TAUREAU (1603).
+
+            L'annexe A la désigne comme « déjà un système de design : un cadre,
+            une structure, un motif », et c'est la planche la plus graphique du
+            répertoire — monochrome, hachurée, les étoiles posées sur une
+            grille. Elle tient donc la place principale de l'immersion.
+
+            Elle est traitée par `Engraving` : le papier crème disparaît et
+            seul le trait reste, en parchemin sur l'aubergine.
+          */}
           <div className="relative hidden w-[26vw] max-w-sm lg:block">
-            <Plate
-              name="constellation-01"
+            <Engraving
+              src={taureau}
               ratio="4/5"
-              label="Planche — figure de constellation"
+              parallax={5}
+              className="relative"
+              alt="Planche gravée — le Taureau, Uranometria de Bayer, 1603"
+              label="Bayer · Uranometria · 1603"
             />
             <Star rays={5} className="absolute -left-6 top-8 h-6 w-6" />
             <Star rays={4} className="absolute -right-2 bottom-16 h-4 w-4" />

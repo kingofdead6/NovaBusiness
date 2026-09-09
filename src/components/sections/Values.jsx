@@ -1,6 +1,8 @@
 import useReveal from "../../hooks/useReveal";
 import { values } from "../../data/site";
 import StarSky from "../StarSky";
+import Engraving from "../Engraving";
+import scorpion from "../../assets/plates/scorpion-trait.png";
 
 /**
  * ÉTAT 2 (suite) — TOUT OU RIEN
@@ -38,6 +40,25 @@ export default function Values() {
       {/* le ciel continue : autre graine, donc autre semis, même monde */}
       <StarSky seed={29} className="text-contraste" />
 
+      {/*
+        HEVELIUS, LE SCORPION.
+
+        L'annexe A retient de ces planches « le trait du dessin principal, la
+        hachure, le cadre ». Elle est posée en marge, très grande et très
+        discrète : elle habite le ciel sans concurrencer le texte.
+
+        Positionnée sur la SECTION et non dans `.edge` : un `absolute` placé
+        dans le conteneur de contenu se calait contre lui et remontait sur la
+        barre de navigation.
+      */}
+      <Engraving
+        src={scorpion}
+        ratio="1/1"
+        parallax={7}
+        alt="Planche gravée — le Scorpion, Hevelius"
+        className="engraving-marge pointer-events-none absolute hidden opacity-[0.16] lg:block"
+      />
+
       <div className="edge relative">
         <h2
           data-reveal="text"
@@ -68,7 +89,7 @@ export default function Values() {
           carte, pas de bordure, pas de puce en gélule, et surtout aucun
           connecteur dessiné d'un bloc à l'autre (§09).
         */}
-        <ul data-reveal="lines" className="mt-28 space-y-16 md:space-y-20">
+        <ul data-reveal="lines" className="relative mt-28 space-y-16 md:space-y-20">
           {values.map((value, i) => (
             <li key={value.title} className="grid gap-4 md:grid-cols-[6rem_1fr]">
               <span className="ink-40 font-mono text-[11px] tabular-nums tracking-[0.18em]">

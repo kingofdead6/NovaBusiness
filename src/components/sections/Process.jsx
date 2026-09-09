@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { initReveals } from "../../lib/reveal";
+import Engraving from "../Engraving";
+import cosmographia from "../../assets/plates/cosmographia-trait.png";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -102,8 +104,28 @@ export default function Process() {
   }, []);
 
   return (
-    <section ref={root} data-ground="clair" className="offscreen-idle py-28 md:py-36">
-      <div className="edge">
+    <section
+      ref={root}
+      data-ground="clair"
+      className="offscreen-idle relative overflow-hidden py-28 md:py-36"
+    >
+      {/*
+        APIANUS, COSMOGRAPHIA.
+
+        L'annexe A en retient « la mise en page : grand cercle, cadre,
+        cartouches d'angle, diagrammes annotés » — c'est le langage d'une
+        MÉTHODE, donc sa place est ici, en regard du déroulé en huit semaines.
+        Sur le fond clair, le trait se peint en noir de lui-même.
+      */}
+      <Engraving
+        src={cosmographia}
+        ratio="1/1"
+        parallax={6}
+        alt="Planche gravée — diagramme annoté, Cosmographia d'Apianus"
+        className="engraving-marge pointer-events-none absolute hidden opacity-[0.22] lg:block"
+      />
+
+      <div className="edge relative">
         <h2
           data-reveal="text"
           className="max-w-3xl font-display text-d2 font-black lowercase tracking-tight"

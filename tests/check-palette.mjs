@@ -30,7 +30,12 @@ for (const f of files) {
     if (/^\s*\*/.test(line)) return;
     const m = code.match(/#[0-9a-fA-F]{3,8}\b|rgba?\([^)]*\)/g);
     if (!m) return;
-    const bad = m.filter((c) => !/^#(000|fff|000000|ffffff)$/i.test(c));
+    /*
+      Le noir et le blanc, avec ou sans alpha, ne sont jamais des couleurs de
+      marque : ce sont des valeurs de MASQUE (`#000` = opaque, `transparent` =
+      découpé). On les autorise donc explicitement, tout le reste échoue.
+    */
+    const bad = m.filter((c) => !/^#(000|fff|000000|ffffff|000000[0-9a-f]{2}|ffffff[0-9a-f]{2})$/i.test(c));
     if (bad.length) hits.push(`${f}:${i + 1}  ${bad.join(' ')}`);
   });
 }
