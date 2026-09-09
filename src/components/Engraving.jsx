@@ -34,12 +34,24 @@ gsap.registerPlugin(ScrollTrigger);
  * le trait du dessin principal, la hachure, le cadre ». Le trait gravé du
  * XVIIe siècle est précisément ce qu'aucun tracé refait à la main n'égalerait.
  */
+/*
+  Trois intensités de tremblé (§05). `null` laisse la planche parfaitement
+  nette — utile quand elle est déjà très petite, où la déformation casserait
+  le trait au lieu de l'onduler.
+*/
+const WARP = {
+  doux: "url(#plate-warp-doux)",
+  normal: "url(#plate-warp)",
+  fort: "url(#plate-warp-fort)",
+};
+
 export default function Engraving({
   src,
   alt = "",
   label = "",
   ratio = "4/5",
   parallax = 0,
+  warp = "normal",
   className = "",
 }) {
   const root = useRef(null);
@@ -101,7 +113,10 @@ export default function Engraving({
         aria-label={alt || undefined}
         aria-hidden={alt ? undefined : "true"}
         className="engraving-img h-full w-full"
-        style={{ "--plate": `url(${src})` }}
+        style={{
+          "--plate": `url(${src})`,
+          filter: WARP[warp] ?? undefined,
+        }}
       />
       {label ? (
         <figcaption className="ink-40 absolute bottom-0 left-0 font-mono text-[10px] uppercase tracking-[0.16em]">

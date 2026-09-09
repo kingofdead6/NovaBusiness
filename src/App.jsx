@@ -8,6 +8,7 @@ import Preloader from "./components/Preloader";
 import Cursor from "./components/Cursor";
 import Navbar from "./components/Navbar";
 import SkyVeil from "./components/SkyVeil";
+import PlateDistortion from "./components/PlateDistortion";
 
 import Hero from "./components/sections/Hero";
 import Takeover from "./components/sections/Takeover";
@@ -44,6 +45,8 @@ export default function App() {
       <div className="grain relative">
         <Preloader onDone={() => setReady(true)} />
         <SkyVeil />
+        {/* définitions des filtres de tremblé, posées une seule fois */}
+        <PlateDistortion />
         <Cursor />
         <Navbar />
 
