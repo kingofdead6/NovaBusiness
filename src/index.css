@@ -2,32 +2,64 @@
 @tailwind components;
 @tailwind utilities;
 
-/*
-  Déclaré HORS de tout `@layer` : `@property` est une règle de premier
-  niveau, un navigateur la rejette si elle est imbriquée dans une couche.
-  Sans elle `--f-mix` reste une chaîne non interpolable et la bascule de
-  couleur se ferait par à-coups au lieu de fondre.
-*/
-@property --f-mix {
-  syntax: "<number>";
-  inherits: true;
-  initial-value: 1;
-}
+/* ==========================================================================
+   LE NOMBRE QUI PORTE TOUT LE RÉCIT
+   ==========================================================================
 
-@property --f-inv {
+   `--ground` vaut 0 sur le fond clair et 1 dans le ciel. Le fond ET l'encre
+   en sont dérivés, si bien qu'une bascule de fond est UNE seule valeur
+   interpolée — c'est ce qui la rend réversible et scrubbable sans effort.
+
+   Déclaré HORS de tout `@layer` : `@property` est une règle de premier
+   niveau, et un navigateur la rejette silencieusement si elle est imbriquée
+   dans une couche. Sans elle, `--ground` reste une chaîne non interpolable
+   et la bascule se ferait par à-coups au lieu de fondre.
+   ========================================================================== */
+@property --ground {
   syntax: "<number>";
   inherits: true;
   initial-value: 0;
 }
 
 @layer base {
+  /*
+    Les couleurs de la palette (`--clair`, `--ciel`, `--contraste`, `--noir`)
+    sont émises ici par le plugin de `tailwind.config.js`, depuis
+    `src/lib/tokens.js`. Ne PAS les redéclarer : ce fichier en est le
+    consommateur, pas la source.
+  */
+
   :root {
-    --charbon: #1c1c1c;
-    --ivoire: #f5f0e8;
-    --bronze: #8a6045;
-    --dore: #c9a86a;
-    --pierre: #8c8780;
-    --blanc: #ffffff;
+    /*
+      LES DEUX RÔLES PEINTS.
+
+      Attention à la forme de `color-mix` : elle paraît inversée mais elle est
+      juste. À `--ground: 1`, le pourcentage de la PREMIÈRE couleur vaut 0 %,
+      donc le résultat est la seconde. S'y tromper est la régression la plus
+      facile à introduire ici.
+
+      L'encre n'est pas l'inverse symétrique du fond : sur le clair le texte
+      courant est NOIR (§04), sur le ciel il est parchemin. D'où deux
+      expressions indépendantes plutôt qu'une seule inversée.
+    */
+    --ground-bg: color-mix(in oklab, var(--clair) calc((1 - var(--ground)) * 100%), var(--ciel));
+    --ground-ink: color-mix(in oklab, var(--noir) calc((1 - var(--ground)) * 100%), var(--contraste));
+  }
+
+  /*
+    REPLI DÉLIBÉRÉ.
+
+    `color-mix()` exige Safari 16.2+ / Chrome 111+, `@property` Safari 16.4+ /
+    Firefox 128+. Sans ce bloc, un navigateur trop ancien rendrait un fond
+    calculé à `unset` — donc transparent — et le site deviendrait illisible.
+    Ici il reste simplement sur le fond clair : le récit disparaît, la
+    lisibilité non.
+  */
+  @supports not (background: color-mix(in oklab, red, blue)) {
+    :root {
+      --ground-bg: var(--clair);
+      --ground-ink: var(--noir);
+    }
   }
 
   /*
@@ -39,7 +71,7 @@
   html {
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    scrollbar-color: var(--bronze) var(--ivoire);
+    scrollbar-color: var(--ground-ink) var(--ground-bg);
     scrollbar-width: thin;
   }
 
@@ -48,21 +80,24 @@
   }
 
   html::-webkit-scrollbar-track {
-    background: var(--ivoire);
+    background: var(--ground-bg);
   }
 
   html::-webkit-scrollbar-thumb {
-    border: 3px solid var(--ivoire);
+    border: 3px solid var(--ground-bg);
     border-radius: 999px;
-    background: var(--bronze);
+    background: var(--ground-ink);
   }
 
-  html::-webkit-scrollbar-thumb:hover {
-    background: var(--dore);
-  }
-
+  /*
+    Le fond et l'encre du document suivent `--ground`. Tout le reste du site
+    hérite de cette couleur : c'est pour cela qu'aucun composant n'a besoin
+    de savoir sur quel fond il se trouve.
+  */
   body {
-    @apply bg-ivoire text-charbon font-sans antialiased;
+    background-color: var(--ground-bg);
+    color: var(--ground-ink);
+    @apply font-sans antialiased;
     overflow-x: hidden;
   }
 
@@ -79,17 +114,17 @@
   }
 
   ::selection {
-    background: var(--bronze);
-    color: var(--blanc);
+    background: var(--ground-ink);
+    color: var(--ground-bg);
   }
 
   :focus-visible {
-    outline: 2px solid var(--bronze);
+    outline: 2px solid var(--ground-ink);
     outline-offset: 3px;
     border-radius: 2px;
   }
 
-  /* the custom cursor replaces the native one on fine pointers only */
+  /* le curseur maison remplace le natif, seulement sur pointeur fin */
   @media (hover: hover) and (pointer: fine) {
     body.has-cursor,
     body.has-cursor * {
@@ -99,172 +134,67 @@
 }
 
 @layer components {
-  /* micro-label used above every section — mono, uppercase, tracked out */
-  .eyebrow {
-    @apply font-mono text-[11px] uppercase tracking-[0.22em] text-pierre;
-  }
-
-  .hairline {
-    @apply h-px w-full bg-charbon/10;
-  }
-
-  /* the ivory/charcoal "paper" grain that sits over the whole page */
-  .grain::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: 60;
-    pointer-events: none;
-    opacity: 0.16;
-    mix-blend-mode: multiply;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /*
+    ANTI-FLASH DES RÉVÉLATIONS.
+    Un bloc [data-reveal] est masqué tant que GSAP n'a pas pris la main,
+    sinon il apparaît une frame à sa position finale avant d'être animé.
+  */
+  [data-reveal-pending="true"] {
+    visibility: hidden;
   }
 
   /*
-   * CADRE STICKY PLEIN ÉCRAN.
-   *
-   * `100vh` d'abord, `100svh` ensuite : sur mobile la barre d'URL qui se
-   * rétracte fait varier `vh` en cours de défilement, et le panneau sticky
-   * sautait à chaque changement. L'unité « small viewport » ne bouge pas.
-   *
-   * Deux déclarations dans la MÊME règle plutôt que deux classes Tailwind :
-   * `.h-[100svh]` est émis avant `.h-screen` dans la feuille, donc le repli
-   * l'aurait emporté sur le correctif. Ici l'ordre est garanti, et les
-   * navigateurs sans `svh` ignorent simplement la seconde ligne.
-   */
+    CADRE PLEIN ÉCRAN.
+    `100vh` d'abord, `100svh` ensuite : sur mobile la barre d'URL qui se
+    rétracte fait varier `vh` en cours de défilement. Les deux déclarations
+    doivent rester dans la MÊME règle — en deux classes Tailwind, l'ordre
+    d'émission ferait gagner le repli sur le correctif.
+  */
   .h-stage {
     height: 100vh;
     height: 100svh;
   }
 
   /*
-   * CARTES « VALEURS » — l'encre se réchauffe au fil du scroll.
-   *
-   * `--card-ink` (0 → 1) est écrit par le composant pendant la traversée de
-   * chaque carte. Comme pour le pied de page, GSAP n'interpole JAMAIS une
-   * couleur : il ne fait varier qu'un nombre, et `color-mix` en dérive les
-   * teintes. C'est aussi ce qui laisse les états `:hover` reprendre la main —
-   * ils réassignent `color`, qui l'emporte sur la valeur héritée.
-   */
-  .card-ink {
-    --card-ink: 0;
-    --ci-title: color-mix(in srgb, var(--dore) calc(var(--card-ink) * 100%), var(--ivoire));
-    --ci-index: color-mix(in srgb, var(--bronze) calc(var(--card-ink) * 100%), var(--dore));
-  }
-
-  .card-ink-title {
-    color: var(--ci-title);
-  }
-
-  .card-ink-index {
-    color: var(--ci-index);
-  }
-
-  @keyframes footer-accent-cycle {
-    0%,
-    100% {
-      color: var(--bronze);
-    }
-    50% {
-      color: var(--dore);
-    }
-  }
-
-  .footer-accent-cycle {
-    animation: footer-accent-cycle 5s ease-in-out infinite;
-  }
-
-  /* each letter/word wrapper produced by splitText() */
+    DÉCOUPE EN MOTS.
+    `.split-line` rogne pendant l'entrée (les mots montent depuis le bas et
+    doivent être coupés au ras de la ligne). Une fois l'animation jouée le
+    rognage trancherait les lettres soulevées par le magnétisme : on le
+    relâche, ce que le Hero signale en posant `data-split-done`.
+  */
   .split-line {
     display: inline-block;
     overflow: hidden;
     vertical-align: bottom;
+    /*
+      Chaque mot est un `inline-block` : sans cela le navigateur pouvait
+      couper À L'INTÉRIEUR d'un mot en fin de ligne (« ét / ait »), puisqu'il
+      raisonne alors sur la boîte et non sur le mot.
+    */
+    white-space: nowrap;
   }
 
-  /*
-    Le rognage ne sert QUE pendant l'entrée (les mots montent depuis le bas et
-    doivent être coupés au ras de la ligne). Une fois l'animation jouée, il
-    empêcherait les lettres soulevées par le magnétisme de dépasser vers le
-    haut : elles seraient tranchées net. On le relâche donc, ce que le Hero
-    signale en posant `data-split-done` à la fin de sa timeline.
-  */
-  [data-split-done="true"] .split-line {
-    overflow: visible;
-  }
   .split-inner {
     display: block;
     will-change: transform;
   }
 
-  /*
-    Anti-flash : un bloc [data-reveal] est masqué tant que GSAP n'a pas pris
-    la main (`initReveals` retire l'attribut une fois le ScrollTrigger posé).
-    Sans ça, le texte s'affiche une frame en clair avant de sauter en place.
-  */
-  [data-reveal-pending="true"] {
-    visibility: hidden;
+  [data-split-done="true"] .split-line {
+    overflow: visible;
   }
 
-  /* ---- Titres tapés à la machine (typed.js) ---------------------------- */
-  /*
-    Le « fantôme » occupe la place du titre complet dès le départ : la mise en
-    page ne bouge donc pas d'un pixel pendant la frappe. Il reste dans le flux
-    (et lisible par les lecteurs d'écran) mais transparent ; le texte visible
-    est écrit par typed.js dans .typed-live, superposé par-dessus.
-  */
-  /*
-    Le titre garde sa boîte pendant la frappe SANS superposition : le fantôme
-    est réduit à une hauteur nulle (il ne sert qu'à réserver la largeur des
-    retours à la ligne), et le texte tapé reste dans le flux normal — c'est
-    indispensable car typed.js insère son curseur en SIBLING du texte : dans
-    une boîte en `position: absolute`, il dérivait en bout de ligne.
-  */
-  .typed-slot {
-    display: block;
-  }
-
-  .typed-ghost {
-    display: block;
-    height: 0;
-    overflow: hidden;
-    visibility: hidden;
-  }
-
-  .typed-live {
-    display: inline;
-  }
-
-  /* frappe terminée : le curseur clignotant disparaît */
-  .typed-slot[data-typed-state="done"] .typed-cursor {
-    display: none;
-  }
-
-  .typed-cursor {
-    font-weight: 300;
-    opacity: 1;
-    animation: typed-blink 1s infinite;
-  }
-
-  @keyframes typed-blink {
-    0%,
-    100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0;
-    }
-  }
-}
-
-@layer components {
-  /* ==================================================================== */
-  /* HERO — PROJECTEUR D'INVERSION                                        */
-  /* ==================================================================== */
+  /* ====================================================================== */
+  /* HERO — PROJECTEUR DE RECOLORATION                                      */
+  /* ====================================================================== */
 
   /*
     Le calque jumeau du titre n'est visible qu'à l'intérieur d'un disque qui
-    suit le curseur. Le disque est décrit par trois variables animées depuis
-    GSAP : centre (`--spot-x`, `--spot-y`) et rayon (`--spot-r`).
+    suit le curseur. Trois variables animées depuis GSAP : centre
+    (`--spot-x`, `--spot-y`) et rayon (`--spot-r`).
+
+    AUCUN fond n'est peint ici : seules les LETTRES changent de couleur. Un
+    fond dessinerait un disque sur le titre — ce n'est pas une inversion du
+    bloc, juste une recoloration des glyphes traversés.
 
     `--spot-r` vaut 0 au repos : sans mouvement de souris, le calque est
     entièrement masqué et le titre s'affiche normalement.
@@ -274,17 +204,7 @@
     --spot-y: 50%;
     --spot-r: 0px;
 
-    /*
-      AUCUN fond : seules les LETTRES du calque changent de couleur. Peindre
-      un fond ici dessinerait un disque sombre sur le titre — ce n'est pas
-      une inversion du bloc, juste une recoloration des glyphes traversés.
-    */
-
-    /*
-      `transparent` APRÈS la butée opaque, et non l'inverse : le disque doit
-      être plein au centre et disparaître au bord. Le second `radial-gradient`
-      est identique — Safari n'applique `mask-image` qu'avec le préfixe.
-    */
+    /* le second `radial-gradient` est identique : Safari exige le préfixe */
     -webkit-mask-image: radial-gradient(
       circle var(--spot-r) at var(--spot-x) var(--spot-y),
       #000 0%,
@@ -302,9 +222,40 @@
   }
 
   /*
-    Le mouvement réduit désactive l'effet : sans animation des variables le
-    calque resterait figé sur son dernier point, et le titre s'afficherait
-    avec une tache de couleur permanente.
+    DÉCOUPE EN LETTRES ET RETOURS À LA LIGNE.
+
+    `splitCharsRich` remplace le texte par une suite de `inline-block` : le
+    navigateur peut alors couper ENTRE DEUX LETTRES d'un même mot, ce qui
+    donnait « déj / à ». On rétablit donc la règle typographique normale —
+    on ne coupe qu'aux espaces — en interdisant le retour à la ligne partout
+    et en le réautorisant sur les seules lettres-espaces, que le découpeur
+    marque d'un `data-space`.
+  */
+  [data-split="true"] {
+    white-space: nowrap;
+  }
+
+  [data-split="true"] .char {
+    white-space: pre;
+  }
+
+  /*
+    La coupure est autorisée APRÈS l'espace : `word-spacing` garde sa chasse
+    et le navigateur peut y passer à la ligne, sans jamais couper un mot.
+  */
+  [data-split="true"] .char[data-space] {
+    white-space: normal;
+    word-break: break-all;
+  }
+
+  .hero-spot .char {
+    transition: none;
+    will-change: transform;
+  }
+
+  /*
+    Mouvement réduit : sans animation des variables le calque resterait figé
+    sur son dernier point, laissant une tache de couleur permanente.
   */
   @media (prefers-reduced-motion: reduce) {
     .hero-spot {
@@ -312,19 +263,17 @@
     }
   }
 
-  /* ==================================================================== */
-  /* MENU PLEIN ÉCRAN (ordinateur)                                        */
-  /* ==================================================================== */
+  /* ====================================================================== */
+  /* MENU PLEIN ÉCRAN                                                       */
+  /* ====================================================================== */
 
   /*
     Chaque ligne fait rouler son libellé au survol : l'exemplaire du haut
-    s'échappe vers le haut pendant que le doré, posé juste en dessous, prend
-    sa place. Les deux exemplaires partagent la même boîte (`.menu-label`,
-    en `overflow: hidden`), si bien que rien ne dépasse pendant le roulement.
+    s'échappe pendant que celui du dessous prend sa place. Les deux partagent
+    la même boîte en `overflow: hidden`, si bien que rien ne dépasse.
 
-    `translateY(100%)` sur l'exemplaire du bas plutôt qu'un décalage en `em` :
-    la hauteur suit la taille de police fluide (`text-d3`) sans réglage par
-    point de rupture.
+    `translateY(±100%)` plutôt qu'un décalage en `em` : la hauteur suit la
+    taille de police fluide sans réglage par point de rupture.
   */
   .menu-label-top,
   .menu-label-bottom {
@@ -345,28 +294,10 @@
     transform: translateY(0);
   }
 
-  /* la flèche part en diagonale et s'éclaire, en écho au roulement */
-  .menu-arrow {
-    opacity: 0;
-    transform: translate3d(-12px, 8px, 0);
-    transition:
-      opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-      transform 0.55s cubic-bezier(0.16, 1, 0.3, 1),
-      color 0.45s ease;
-  }
-
-  .menu-row:hover .menu-arrow,
-  .menu-row:focus-visible .menu-arrow {
-    opacity: 1;
-    color: var(--dore);
-    transform: translate3d(0, 0, 0);
-  }
-
   /*
-    Le survol d'une ligne estompe les autres : la cible visée se détache,
-    l'œil n'a plus à balayer toute la liste. `:has()` porte l'effet sur le
-    conteneur — impossible autrement de styler les FRÈRES non survolés.
-    Les navigateurs sans `:has()` affichent simplement la liste sans
+    Le survol d'une ligne estompe les autres : la cible visée se détache.
+    `:has()` porte l'effet sur le conteneur — impossible autrement de styler
+    les FRÈRES non survolés. Sans `:has()`, la liste s'affiche sans
     atténuation, ce qui reste parfaitement lisible.
   */
   .menu-row {
@@ -383,6 +314,59 @@
     @apply mx-auto w-full max-w-[1440px] px-5 md:px-10 xl:px-16;
   }
 
+  /* ====================================================================== */
+  /* UTILITAIRES SÉMANTIQUES                                                */
+  /* ====================================================================== */
+
+  /*
+    Ces classes remplacent les couleurs fixes du balisage (`text-ivoire/55`,
+    `border-charbon/10`…). Elles dérivent toutes de `--ground-ink`, donc elles
+    sont JUSTES quel que soit le fond, et le site n'a jamais à écrire une
+    couleur en dur dans un composant.
+
+    C'est aussi ce qui supprime un piège hérité de la version précédente :
+    Tailwind émet ses couches dans l'ordre base → components → utilities, si
+    bien qu'une surcharge de `bg-ivoire` écrite côté « components » était
+    systématiquement battue par l'utilitaire d'origine, à spécificité pourtant
+    égale. En ne posant plus jamais de couleur fixe, la guerre de spécificité
+    n'a plus lieu d'être.
+  */
+  .ink {
+    color: var(--ground-ink);
+  }
+
+  .ink-60 {
+    color: color-mix(in oklab, transparent 40%, var(--ground-ink));
+  }
+
+  .ink-40 {
+    color: color-mix(in oklab, transparent 60%, var(--ground-ink));
+  }
+
+  .rule-ink {
+    border-color: color-mix(in oklab, transparent 82%, var(--ground-ink));
+  }
+
+  /*
+    NÉGATIF LOCAL : l'encre devient le fond, et réciproquement.
+
+    Deux précautions, apprises à la vérification :
+
+    1. Le nom n'est PAS `fill-ink` : le jeton de couleur `ink` fait générer à
+       Tailwind un utilitaire SVG `.fill-ink{fill:…}` qui entrait en collision
+       avec celui-ci.
+
+    2. Le sélecteur est doublé. Tailwind émet ses utilitaires dans l'ordre
+       alphabétique de la couche : `.ink` sortait APRÈS et reprenait la main
+       sur `color`, si bien qu'un bouton plein affichait son texte dans la
+       couleur de son propre fond — invisible. Le cran de spécificité
+       supplémentaire règle le conflit sans dépendre de l'ordre d'émission.
+  */
+  .inverse.inverse {
+    background-color: var(--ground-ink);
+    color: var(--ground-bg);
+  }
+
   .link-underline {
     background-image: linear-gradient(currentColor, currentColor);
     background-size: 0% 1px;
@@ -390,8 +374,18 @@
     background-position: left bottom;
     transition: background-size 0.45s cubic-bezier(0.16, 1, 0.3, 1);
   }
+
   .link-underline:hover {
     background-size: 100% 1px;
+  }
+
+  /*
+    Rendu suspendu hors écran (§07, limites non négociables). `contain-intrinsic-size`
+    donne une hauteur estimée pour que la barre de défilement ne saute pas.
+  */
+  .offscreen-idle {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 100vh;
   }
 }
 
@@ -403,435 +397,5 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
-  }
-}
-
-/* ====================================================================== */
-/* PIED DE PAGE — COUCHE D'ANIMATION                                      */
-/* ====================================================================== */
-/*
-  Tout est ADDITIF : aucune règle ici ne change une couleur, une taille ou
-  une position au repos. Le pied de page rendu sans JavaScript et sans
-  survol est exactement celui d'avant — ces déclarations n'ajoutent que du
-  mouvement par-dessus.
-*/
-@layer components {
-  /*
-    AURORE. Deux voiles doré/ivoire tournent lentement derrière le contenu.
-    `bg-bronze` reste la couleur de fond réelle du <footer> : ces voiles sont
-    des pseudo-éléments très peu opaques posés PAR-DESSUS, donc la teinte de
-    base ne bouge jamais si l'animation ne tourne pas.
-
-    z-index 0 sur ::before et `position: relative; z-index: 1` sur les
-    enfants directs : sans quoi les voiles couvriraient les liens et
-    intercepteraient les clics.
-  */
-  /*
-    INVERSION À L'ENTRÉE.
-    ---------------------------------------------------------------------
-    Le pied de page arrive en négatif (fond ivoire, encre bronze) puis
-    bascule vers ses couleurs définitives pendant qu'il monte à l'écran.
-
-    Deux variables seulement — `--f-bg` (fond) et `--f-ink` (encre) — et
-    TOUT le bloc s'y réfère : l'inversion se joue donc en interpolant deux
-    valeurs, sans dupliquer une seule règle.
-
-    `@property` déclare `--f-mix` comme un vrai nombre : sans cette
-    déclaration une variable personnalisée est une simple chaîne, que ni
-    GSAP ni le navigateur ne savent interpoler — la bascule se ferait d'un
-    coup au lieu de fondre. Les navigateurs qui l'ignorent gardent la
-    valeur finale posée plus bas (repli : couleurs normales, pas
-    d'inversion).
-  */
-  .footer-invert {
-    --f-mix: 1;
-    --f-bg: color-mix(in oklab, var(--ivoire) calc((1 - var(--f-mix)) * 100%), var(--bronze));
-    --f-ink: color-mix(in oklab, var(--bronze) calc((1 - var(--f-mix)) * 100%), var(--ivoire));
-    background-color: var(--f-bg);
-    color: var(--f-ink);
-  }
-
-  /*
-    Le logo est un JPEG à fond ivoire : pendant la phase inversée il se
-    fondrait dans un fond lui aussi ivoire. On l'inverse à l'identique, en
-    suivant la même variable, puis il revient au naturel.
-  */
-  .footer-invert .footer-logo img {
-    filter: invert(var(--f-inv, 0));
-  }
-
-  .footer-aurora::before {
-    content: "";
-    position: absolute;
-    inset: -40%;
-    z-index: 0;
-    pointer-events: none;
-    /*
-      Les voiles s'estompent tant que le pied de page est en négatif
-      (`opacity: var(--f-mix)`) : sur fond ivoire ils formeraient des taches
-      sales au lieu d'une aurore.
-    */
-    opacity: var(--f-mix);
-    background:
-      radial-gradient(38% 44% at 18% 22%, rgba(201, 168, 106, 0.42), transparent 62%),
-      radial-gradient(32% 40% at 82% 30%, rgba(245, 240, 232, 0.20), transparent 60%),
-      radial-gradient(46% 50% at 50% 92%, rgba(201, 168, 106, 0.28), transparent 66%);
-    filter: blur(14px);
-    animation: footer-aurora 22s ease-in-out infinite alternate;
-  }
-
-  /*
-    Grille de lumière qui remonte : donne une profondeur « scène » sans
-    dessiner de trait net. `mask-image` l'estompe vers le haut pour qu'elle
-    ne concurrence jamais le nom géant.
-  */
-  .footer-aurora::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    opacity: calc(0.5 * var(--f-mix));
-    background-image:
-      repeating-linear-gradient(90deg, rgba(245, 240, 232, 0.055) 0 1px, transparent 1px 84px);
-    -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 55%);
-    mask-image: linear-gradient(to top, #000 0%, transparent 55%);
-    animation: footer-grid 14s linear infinite;
-  }
-
-  .footer-aurora > * {
-    position: relative;
-    z-index: 1;
-  }
-
-  @keyframes footer-aurora {
-    0% {
-      transform: translate3d(-4%, -3%, 0) scale(1) rotate(0deg);
-      filter: blur(14px) hue-rotate(0deg);
-    }
-    50% {
-      transform: translate3d(5%, 4%, 0) scale(1.14) rotate(4deg);
-      filter: blur(22px) hue-rotate(-12deg);
-    }
-    100% {
-      transform: translate3d(-2%, 6%, 0) scale(1.06) rotate(-3deg);
-      filter: blur(16px) hue-rotate(8deg);
-    }
-  }
-
-  @keyframes footer-grid {
-    to {
-      background-position: 84px 0;
-    }
-  }
-
-  /*
-    NOM GÉANT. Un dégradé doré balaie les lettres en continu.
-
-    Le dégradé est porté par CHAQUE lettre et non par le <h2> : `splitChars`
-    a fait de chaque caractère un `inline-block`, et un fond posé sur le
-    conteneur serait recadré lettre par lettre — le balayage sauterait au
-    lieu de glisser. Avec `background-attachment: fixed` chaque span
-    échantillonne le MÊME dégradé ancré au viewport : les lettres restent
-    donc parfaitement raccordées entre elles.
-
-    La couleur de repli (`color: var(--ivoire)`, héritée) reste en place :
-    un navigateur sans clip texte affiche le nom exactement comme avant.
-  */
-  .footer-wordmark .char {
-    /*
-      Les butées neutres pointent vers `--f-ink` et non l'ivoire fixe : le
-      nom suit ainsi l'inversion, tandis que le cœur doré du balayage reste
-      identique dans les deux états.
-    */
-    background-image: linear-gradient(
-      100deg,
-      var(--f-ink) 0%,
-      var(--f-ink) 34%,
-      #f6e2bd 44%,
-      var(--dore) 50%,
-      #f6e2bd 56%,
-      var(--f-ink) 66%,
-      var(--f-ink) 100%
-    );
-    background-attachment: fixed;
-    background-size: 260% 100%;
-    background-position: 130% 0;
-    -webkit-background-clip: text;
-    background-clip: text;
-    animation: footer-sheen 7s cubic-bezier(0.65, 0, 0.35, 1) infinite;
-  }
-
-  /*
-    La transparence n'est posée QUE lorsque le clip texte est réellement
-    supporté : sinon le nom disparaîtrait purement et simplement.
-  */
-  @supports (-webkit-background-clip: text) or (background-clip: text) {
-    .footer-wordmark .char {
-      -webkit-text-fill-color: transparent;
-      color: transparent;
-    }
-  }
-
-  @keyframes footer-sheen {
-    0%,
-    12% {
-      background-position: 130% 0;
-    }
-    88%,
-    100% {
-      background-position: -30% 0;
-    }
-  }
-
-  /*
-    Chaque lettre réagit au survol : elle se soulève et projette une lueur.
-    Le halo est peint par `drop-shadow` et non `text-shadow` : le remplissage
-    du texte étant transparent (clip du dégradé), une ombre de texte n'aurait
-    rien à dessiner. Le filtre, lui, opère sur le rendu FINAL de la lettre.
-
-    `transform` est laissé à GSAP (magnétisme) : la transition ne porte que
-    sur le filtre, sans quoi les deux se disputeraient la même propriété.
-  */
-  .footer-wordmark .char {
-    transition: filter 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-    will-change: transform, filter;
-  }
-
-  .footer-wordmark .char.is-lit {
-    filter:
-      drop-shadow(0 0 16px rgba(201, 168, 106, 0.6))
-      drop-shadow(0 0 42px rgba(201, 168, 106, 0.3));
-  }
-
-  /*
-    BOUTONS. Un éclat traverse la pilule au survol. Le pseudo-élément est
-    masqué par `overflow: hidden` du parent et n'intercepte aucun clic.
-  */
-  .footer-shine {
-    position: relative;
-    overflow: hidden;
-    isolation: isolate;
-  }
-
-  .footer-shine::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: -140%;
-    width: 60%;
-    z-index: -1;
-    pointer-events: none;
-    background: linear-gradient(
-      100deg,
-      transparent,
-      rgba(245, 240, 232, 0.55),
-      transparent
-    );
-    transform: skewX(-18deg);
-    transition: left 0.75s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .footer-shine:hover::after {
-    left: 140%;
-  }
-
-  /* la pilule pleine est claire : l'éclat y passe en bronze pour rester visible */
-  .footer-shine-dark::after {
-    background: linear-gradient(
-      100deg,
-      transparent,
-      rgba(138, 96, 69, 0.35),
-      transparent
-    );
-  }
-
-  /*
-    COORDONNÉES. Un soulignement doré se déploie depuis la gauche et le
-    texte glisse d'un cheveu — le `hover:opacity-70` existant reste en place.
-  */
-  .footer-link {
-    position: relative;
-    width: fit-content;
-    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .footer-link::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0.6rem;
-    height: 1px;
-    background: var(--dore);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .footer-link:hover::after {
-    transform: scaleX(1);
-  }
-
-  .footer-link:hover {
-    transform: translateX(6px);
-  }
-
-  /* aligné à droite : le trait part alors du bord droit */
-  .footer-link-right::after {
-    transform-origin: right;
-  }
-
-  .footer-link-right:hover {
-    transform: translateX(-6px);
-  }
-
-  /* LOGO. Halo doré pulsé au survol, sans toucher au `hover:-translate-y` existant. */
-  .footer-logo {
-    transition:
-      transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
-      box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .footer-logo:hover {
-    box-shadow:
-      0 0 0 1px rgba(201, 168, 106, 0.6),
-      0 12px 40px -8px rgba(201, 168, 106, 0.55);
-  }
-
-  /* FLÈCHE « retour en haut » : petit saut en boucle au survol. */
-  .footer-top-arrow {
-    display: inline-block;
-    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .footer-top:hover .footer-top-arrow {
-    animation: footer-hop 0.9s ease-in-out infinite;
-  }
-
-  @keyframes footer-hop {
-    0%,
-    100% {
-      transform: translateY(0);
-    }
-    45% {
-      transform: translateY(-5px);
-    }
-  }
-
-  /* Filet du bas : un point lumineux le parcourt en continu. */
-  .footer-rule {
-    position: relative;
-  }
-
-  .footer-rule::before {
-    content: "";
-    position: absolute;
-    top: -1px;
-    left: 0;
-    height: 1px;
-    width: 22%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(201, 168, 106, 0.9),
-      transparent
-    );
-    animation: footer-trace 9s cubic-bezier(0.65, 0, 0.35, 1) infinite;
-  }
-
-  @keyframes footer-trace {
-    0% {
-      transform: translateX(-100%);
-      opacity: 0;
-    }
-    12%,
-    88% {
-      opacity: 1;
-    }
-    100% {
-      transform: translateX(460%);
-      opacity: 0;
-    }
-  }
-}
-
-/*
-  SURCHARGES DE L'INVERSION.
-  ----------------------------------------------------------------------
-  Placées dans `@layer utilities` et NON dans `@layer components` : Tailwind
-  émet ses couches dans l'ordre base → components → utilities, si bien qu'une
-  surcharge écrite côté « components » était systématiquement battue par
-  l'utilitaire d'origine (`bg-ivoire`, `text-bronze`…) à spécificité pourtant
-  plus faible. Ici elles arrivent après, et l'inversion s'applique vraiment.
-
-  Les opacités d'origine sont reproduites à l'identique : seule la teinte de
-  référence change (`--f-ink` au lieu de l'ivoire fixe).
-*/
-@layer utilities {
-  /*
-    Les enfants héritent de `color`, mais les utilitaires Tailwind
-    (`text-ivoire/55`, `border-ivoire/20`, `bg-ivoire`…) portent des couleurs
-    FIXES qui ne suivraient pas la bascule. On les redirige ici vers les deux
-    variables, en conservant exactement les mêmes opacités qu'avant.
-  */
-  .footer-invert .text-ivoire\/55 {
-    color: color-mix(in oklab, transparent 45%, var(--f-ink));
-  }
-
-  .footer-invert .text-ivoire\/70 {
-    color: color-mix(in oklab, transparent 30%, var(--f-ink));
-  }
-
-  .footer-invert .border-ivoire\/20 {
-    border-color: color-mix(in oklab, transparent 80%, var(--f-ink));
-  }
-
-  .footer-invert .border-ivoire\/70 {
-    border-color: color-mix(in oklab, transparent 30%, var(--f-ink));
-  }
-
-  /* pilule pleine et carte du logo : fond = encre, texte = fond (négatif local) */
-  .footer-invert .bg-ivoire {
-    background-color: var(--f-ink);
-  }
-
-  .footer-invert .text-bronze {
-    color: var(--f-bg);
-  }
-
-  .footer-invert.footer-invert .hover\:bg-ivoire:hover {
-    background-color: var(--f-ink);
-  }
-
-  .footer-invert.footer-invert .hover\:text-bronze:hover {
-    color: var(--f-bg);
-  }
-
-  .footer-invert.footer-invert .hover\:border-ivoire:hover {
-    border-color: var(--f-ink);
-  }
-
-  .footer-invert.footer-invert .hover\:text-ivoire:hover {
-    color: var(--f-ink);
-  }
-
-  /*
-    `hover:bg-blanc` est un blanc FIXE : pendant la phase inversée le fond du
-    bloc est déjà ivoire, et la pilule survolée s'y dissoudrait. On l'éclaircit
-    donc relativement à l'encre courante, ce qui conserve l'effet « la pilule
-    s'illumine » dans les deux états.
-  */
-  /*
-    `.footer-invert` répété sur TOUTES les surcharges `:hover` : un cran de
-    spécificité en plus, sans changer ce qui est sélectionné. Tailwind émet ses
-    variantes `hover:` tout à la FIN de la couche utilitaires — donc après ces
-    règles — et à spécificité égale la dernière l'emporterait. Les surcharges
-    sans `:hover` n'en ont pas besoin : leurs utilitaires d'origine sont émis
-    plus haut dans la couche.
-  */
-  .footer-invert.footer-invert .hover\:bg-blanc:hover {
-    background-color: color-mix(in oklab, var(--blanc) 45%, var(--f-ink));
   }
 }

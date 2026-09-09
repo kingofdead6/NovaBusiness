@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import Media from "../Media";
-import LiquidVeil from "../LiquidVeil";
 import { initReveals } from "../../lib/reveal";
 import TypedHeading from "../TypedHeading";
 import { services } from "../../data/site";
@@ -44,49 +43,29 @@ export default function Services() {
     <section
       ref={root}
       id="services"
-      className="relative bg-ivoire pb-24 pt-[42vh] md:pb-32 md:pt-[48vh]"
+      data-ground="clair"
+      className="relative pb-24 pt-28 md:pb-32 md:pt-36"
     >
-      {/*
-        COULÉE DE RACCORD — sortie de la section Values.
-
-        Values (charbon) se termine, et la matière déborde par le haut de
-        Services : elle arrive PLEINE, laisse pendre ses longues coulures, puis
-        se retire vers le haut pendant qu'on descend — les cartes Services
-        apparaissent dessous, exactement comme dans l'enregistrement.
-
-        `reverse` : progression 1 → 0, la matière part de la couverture totale.
-        Le `pt-[42vh]` réserve la hauteur qu'elle occupe, donc le titre n'est
-        jamais masqué.
-
-        FENÊTRE : elle démarre à `top 92%` et non `top bottom`. Avec
-        `top bottom` la coulée s'animait dès que Services touchait le BAS du
-        viewport — soit pendant tout le dernier écran de Values, dont elle
-        recouvrait les cartes. Elle ne commence donc plus qu'une fois la
-        frontière atteinte, et Values garde ses animations pour elle.
-
-        NB : pas d'`overflow-hidden` sur la <section> — il créerait un
-        conteneur de défilement qui casserait le `position: sticky` des
-        cartes. Le voile se découpe lui-même en interne.
-      */}
-      <LiquidVeil flip reverse start="top 92%" end="top 10%" />
-
       <div className="edge relative z-10">
         <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div className="max-w-xl">
-            <span data-reveal="fade" className="eyebrow mb-6 block">
+            <span
+              data-reveal="fade"
+              className="ink-40 mb-6 block font-mono text-[11px] uppercase tracking-[0.18em]"
+            >
               Services
             </span>
             <TypedHeading
               as="h2"
               className="text-d2 font-medium"
               text="Quatre métiers, une seule équipe"
-              html={'Quatre métiers, <span class="font-display italic text-bronze">une seule équipe</span>'}
+              html={'Quatre métiers, <span class="font-display italic ink">une seule équipe</span>'}
             />
           </div>
           <p
             data-reveal="fade"
             data-reveal-delay="0.15"
-            className="max-w-xs text-[15px] leading-relaxed text-pierre"
+            className="max-w-xs text-[15px] leading-relaxed ink-40"
           >
             Vous pouvez tout nous confier ou piocher. On travaille aussi en
             renfort d'une équipe interne.
@@ -99,13 +78,13 @@ export default function Services() {
           <article
             key={s.index}
             data-service
-            className="sticky top-24 mb-4 origin-top overflow-hidden rounded-[3px] border border-charbon/10 bg-blanc"
+            className="sticky top-24 mb-4 origin-top overflow-hidden rounded-[3px] rule-ink border bg-[var(--ground-bg)]"
           >
             <div className="grid gap-0 md:grid-cols-2">
               <div className="flex flex-col justify-between p-7 md:p-10">
                 <div className="mb-8 flex items-center gap-4">
-                  <span className="font-mono text-[11px] text-bronze">{s.index}</span>
-                  <span className="hairline flex-1" />
+                  <span className="font-mono text-[11px] ink">{s.index}</span>
+                  <span className="rule-ink h-px flex-1 border-t" />
                 </div>
 
                 <div>
@@ -119,17 +98,20 @@ export default function Services() {
                     data-reveal="fade"
                     data-reveal-delay="0.1"
                     data-reveal-start="top 70%"
-                    className="mt-4 max-w-sm text-[15px] leading-relaxed text-pierre"
+                    className="mt-4 max-w-sm text-[15px] leading-relaxed ink-40"
                   >
                     {s.lede}
                   </p>
 
-                  <ul className="mt-7 flex flex-wrap gap-2">
+                  {/*
+                    Les prestations ne sont plus des capsules (§09 :
+                    « étiquette qui n'est pas cliquable »). Une simple liste
+                    séparée par des puces — c'est d'ailleurs ainsi que le §08
+                    veut voir énoncé ce qui a été livré.
+                  */}
+                  <ul className="mt-7 flex flex-wrap gap-x-3 gap-y-1">
                     {s.items.map((item) => (
-                      <li
-                        key={item}
-                        className="rounded-full border border-charbon/12 px-3.5 py-1.5 font-mono text-[11px] text-charbon/70"
-                      >
+                      <li key={item} className="ink-60 font-mono text-[11px]">
                         {item}
                       </li>
                     ))}

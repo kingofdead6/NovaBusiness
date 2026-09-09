@@ -58,7 +58,7 @@ function JournalCard({ post, i }) {
             whileInView={{ scaleY: 0 }}
             viewport={{ once: true, margin: "-60px" }}
             transition={{ duration: 1.05, delay: 0.15 + i * 0.12, ease: EASE }}
-            className="absolute inset-0 z-10 origin-top bg-bronze"
+            className="absolute inset-0 z-10 origin-top inverse"
           />
 
           {/* parallaxe : l'image dérive plus lentement que la carte */}
@@ -69,21 +69,25 @@ function JournalCard({ post, i }) {
           </motion.div>
 
           {/* voile bronze au survol */}
-          <div className="pointer-events-none absolute inset-0 bg-bronze/0 transition-colors duration-700 ease-nova group-hover:bg-bronze/10" />
+          <div className="pointer-events-none absolute inset-0 inverse/0 transition-colors duration-700 ease-nova group-hover:inverse/10" />
 
           {/* index éditorial */}
-          <span className="absolute bottom-3 left-4 z-[5] font-mono text-[10px] tracking-[0.2em] text-blanc/70 mix-blend-difference">
+          <span className="absolute bottom-3 left-4 z-[5] font-mono text-[10px] tracking-[0.2em] text-[var(--ground-bg)]/70 mix-blend-difference">
             {String(i + 1).padStart(2, "0")}
           </span>
         </div>
 
-        <div className="mt-5 flex items-center gap-3">
-          <span className="rounded-full border border-charbon/12 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-bronze">
-            {post.tag}
-          </span>
-          <span className="font-mono text-[10px] text-pierre">{post.read}</span>
-          <span className="ml-auto translate-x-[-6px] font-mono text-[11px] text-bronze opacity-0 transition-all duration-500 ease-nova group-hover:translate-x-0 group-hover:opacity-100">
-            →
+        {/*
+          La catégorie n'est plus une gélule : le §09 interdit « l'étiquette
+          qui n'est pas cliquable ». Elle redevient ce qu'elle est — un mot,
+          en voix secondaire, séparé du reste par une puce typographique.
+        */}
+        <div className="mt-5 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.14em]">
+          <span className="ink">{post.tag}</span>
+          <span className="ink-40">·</span>
+          <span className="ink-40">{post.read}</span>
+          <span className="ml-auto translate-x-[-6px] font-mono text-[11px] ink opacity-0 transition-all duration-500 ease-nova group-hover:translate-x-0 group-hover:opacity-100">
+            lire
           </span>
         </div>
 
@@ -92,7 +96,7 @@ function JournalCard({ post, i }) {
         </h3>
 
         {/* filet qui se trace au survol */}
-        <span className="mt-4 block h-px w-full origin-left scale-x-0 bg-charbon/20 transition-transform duration-700 ease-nova group-hover:scale-x-100" />
+        <span className="mt-4 block h-px w-full origin-left scale-x-0 bg-ciel/20 transition-transform duration-700 ease-nova group-hover:scale-x-100" />
       </a>
     </motion.article>
   );
@@ -107,7 +111,7 @@ export default function Journal() {
   const ruleScale = useSpring(scrollYProgress, { stiffness: 90, damping: 26 });
 
   return (
-    <section id="journal" className="bg-ivoire py-24 md:py-32">
+    <section id="journal" className="bg-[var(--ground-bg)] py-24 md:py-32">
       <div className="edge">
         <div ref={headRef} className="mb-12">
           <div className="flex items-end justify-between gap-6">
@@ -124,7 +128,7 @@ export default function Journal() {
               <h2 className="text-d2 font-medium lowercase">
                 <Reveal delay={0.05}>ce</Reveal>{" "}
                 <Reveal delay={0.12}>qu'on</Reveal>{" "}
-                <Reveal delay={0.19} className="font-display italic text-bronze">
+                <Reveal delay={0.19} className="font-display italic ink">
                   apprend
                 </Reveal>
               </h2>
@@ -132,16 +136,16 @@ export default function Journal() {
             <a
               href="#journal"
               data-cursor="hover"
-              className="link-underline hidden font-mono text-[11px] uppercase tracking-[0.18em] text-pierre md:block"
+              className="link-underline hidden font-mono text-[11px] uppercase tracking-[0.18em] ink-40 md:block"
             >
-              tous les articles →
+              tous les articles
             </a>
           </div>
 
           {/* filet qui se trace au scroll */}
           <motion.div
             style={{ scaleX: ruleScale }}
-            className="mt-8 h-px w-full origin-left bg-charbon/15"
+            className="mt-8 h-px w-full origin-left bg-ciel/15"
           />
         </div>
 

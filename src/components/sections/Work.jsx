@@ -95,7 +95,7 @@ export default function Work() {
       id="realisations"
       aria-roledescription="carrousel"
       aria-label="Réalisations récentes"
-      className="relative overflow-hidden bg-ivoire py-24 md:py-32"
+      className="relative overflow-hidden bg-[var(--ground-bg)] py-24 md:py-32"
     >
       <div className="edge">
         <div className="mb-12 flex items-end justify-between gap-6">
@@ -107,7 +107,7 @@ export default function Work() {
               as="h2"
               className="text-d2 font-medium lowercase"
               text="travaux récents"
-              html={'travaux <span class="font-display italic text-bronze">récents</span>'}
+              html={'travaux <span class="font-display italic ink">récents</span>'}
             />
           </div>
           <MagneticButton href="#contact" variant="ghost" className="hidden md:inline-flex">
@@ -190,7 +190,13 @@ export default function Work() {
                     }`}
                     style={{ transformStyle: "preserve-3d" }}
                   >
-                    <div className="overflow-hidden rounded-[3px] bg-blanc shadow-[0_30px_80px_-40px_rgba(28,28,28,0.55)]">
+                    {/*
+                      L'ombre portée est remplacée par un filet : le §04
+                      interdit toute couleur hors palette, et une ombre en
+                      `rgba` en introduisait une. Le trait suffit à détacher
+                      la carte, ce qui est aussi le langage de la planche.
+                    */}
+                    <div className="rule-ink overflow-hidden border">
                       <Media
                         src={p.img}
                         ratio="16/10"
@@ -219,7 +225,7 @@ export default function Work() {
                 transition={{ duration: reduce ? 0 : 0.45, ease: [0.16, 1, 0.3, 1] }}
               >
                 <h3 className="text-d3 font-bold tracking-tight">{projects[active].name}</h3>
-                <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.16em] text-pierre">
+                <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.16em] ink-40">
                   {projects[active].kind} — {projects[active].year}
                 </p>
               </motion.div>
@@ -227,7 +233,7 @@ export default function Work() {
           </div>
 
           <div className="flex items-center gap-3">
-            <span aria-hidden="true" className="font-mono text-[11px] text-pierre">
+            <span aria-hidden="true" className="font-mono text-[11px] ink-40">
               {String(active + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
             </span>
             {[-1, 1].map((dir) => (
@@ -238,9 +244,13 @@ export default function Work() {
                 onKeyDown={onKeyDown}
                 data-cursor="hover"
                 aria-label={dir === -1 ? "Projet précédent" : "Projet suivant"}
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-charbon/15 transition-colors duration-500 ease-nova hover:border-bronze hover:bg-bronze hover:text-blanc"
+                /*
+                  Le rond reste : c'est un vrai bouton, et le §09 n'interdit
+                  la forme en gélule que lorsqu'elle est décorative.
+                */
+                className="rule-ink flex h-11 w-11 items-center justify-center rounded-full border transition-colors duration-500 ease-nova hover:inverse"
               >
-                <span aria-hidden="true">{dir === -1 ? "←" : "→"}</span>
+                <span aria-hidden="true" className="font-mono text-[10px] uppercase">{dir === -1 ? "préc" : "suiv"}</span>
               </button>
             ))}
           </div>

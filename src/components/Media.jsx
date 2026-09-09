@@ -68,11 +68,12 @@ export default function Media({
           />
         ) : (
           <div
-            className={`flex h-full w-full flex-col items-center justify-center gap-3 border border-dashed p-6 text-center ${
-              dark
-                ? "border-dore/40 bg-charbon text-dore/70"
-                : "border-bronze/35 bg-bronze/[0.05] text-bronze/70"
-            }`}
+            /*
+              L'emplacement annoté suit l'encre courante : il est donc juste
+              sur le clair comme sur le ciel, sans variante par fond. La prop
+              `dark` n'a plus lieu d'être depuis que le fond est global.
+            */
+            className="rule-ink ink-60 flex h-full w-full flex-col items-center justify-center gap-3 border border-dashed p-6 text-center"
           >
             <svg
               viewBox="0 0 40 40"

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
+import { palette } from "../lib/tokens";
 
 /**
  * Curseur maison : un petit disque qui grossit sur les éléments marqués
@@ -14,13 +15,20 @@ import gsap from "gsap";
  * une liste de sélecteurs se désynchroniserait à la première refonte.
  */
 
-/* Couleurs du disque selon le fond. */
-const INK_ON_LIGHT = "#8A6045"; // bronze
-const INK_ON_DARK = "#F5F0E8"; // ivoire
+/*
+  Les couleurs viennent de la source unique (`src/lib/tokens.js`) : ce
+  composant compare des LUMINANCES, il lui faut donc de vraies valeurs et
+  non des variables CSS. C'est le seul consommateur de ce genre.
 
-/* Variantes au survol d'une cible `data-cursor`. */
-const ACCENT_ON_LIGHT = "#C9A86A"; // doré
-const ACCENT_ON_DARK = "#FFFFFF";
+  Sur le clair on dessine avec le ciel, sur le ciel avec le contraste : la
+  règle du §04 appliquée au curseur lui-même.
+*/
+const INK_ON_LIGHT = palette.ciel;
+const INK_ON_DARK = palette.contraste;
+
+/* Au survol d'une cible, le disque passe dans l'autre sens : négatif local. */
+const ACCENT_ON_LIGHT = palette.noir;
+const ACCENT_ON_DARK = palette.clair;
 
 /**
  * Luminance perçue d'une couleur CSS `rgb()` / `rgba()`.
@@ -183,13 +191,13 @@ export default function Cursor() {
     <div
       ref={dot}
       aria-hidden="true"
-      className="pointer-events-none fixed left-0 top-0 z-[70] hidden h-3 w-3 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-bronze md:flex"
+      className="pointer-events-none fixed left-0 top-0 z-[70] hidden h-3 w-3 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full md:flex"
+      style={{ backgroundColor: INK_ON_LIGHT }}
     >
       {label && (
         <span
-          className={`whitespace-nowrap font-mono text-[3.2px] uppercase tracking-[0.14em] ${
-            dark ? "text-charbon" : "text-ivoire"
-          }`}
+          className="whitespace-nowrap font-mono text-[3.2px] uppercase tracking-[0.14em]"
+          style={{ color: dark ? palette.ciel : palette.clair }}
         >
           {label}
         </span>

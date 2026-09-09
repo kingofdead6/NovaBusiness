@@ -119,7 +119,22 @@ export function splitCharsRich(el) {
     span.className = "char";
     span.style.display = "inline-block";
     span.style.willChange = "transform";
-    span.textContent = character === " " ? " " : character;
+    /*
+      L'ESPACE EST UN CAS À PART.
+
+      Un `inline-block` contenant une espace ordinaire se rend avec une
+      largeur NULLE : les mots se ressoudaient (« Onrendvisible… »). On lui
+      donne donc une espace insécable pour qu'il occupe sa chasse, et on le
+      marque `data-space` — c'est le seul endroit où la feuille de styles
+      réautorise un retour à la ligne, si bien que la coupure se fait entre
+      les mots et jamais à l'intérieur.
+    */
+    if (character === " ") {
+      span.setAttribute("data-space", "");
+      span.textContent = " ";
+    } else {
+      span.textContent = character;
+    }
     span.setAttribute("aria-hidden", "true");
     return span;
   };

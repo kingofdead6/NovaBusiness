@@ -18,14 +18,19 @@ export const nav = [
   { label: "journal", href: "#journal" },
 ];
 
+/*
+  Les vrais clients de l'agence (§01). Ils ne sont PAS rendus en logos :
+  le §09 interdit la rangée de logos alignés. Ils sont posés en une ligne
+  de texte, en voix secondaire, dans le bas du hero — la preuve à voix
+  basse de huyml.co.
+*/
 export const clients = [
-  "Maison Lavoie",
-  "Atelier 9e",
-  "Rive Gauche Co.",
-  "Perrin & Fils",
-  "Studio Marais",
-  "Céleste",
-  "Bastien Paris",
+  "GoJob",
+  "Akeneo",
+  "Clic Campus",
+  "Skilleos",
+  "SIMONE",
+  "Kâri Finance",
 ];
 
 export const services = [

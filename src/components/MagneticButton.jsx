@@ -32,15 +32,22 @@ export default function MagneticButton({
     y.set(0);
   };
 
+  /*
+    LA GÉLULE A DISPARU (§09).
+
+    Le brief interdit « le bouton en gélule contournée », qu'il désigne comme
+    la signature visuelle des sites générés. Le magnétisme, lui, reste : c'est
+    un lien TEXTE qui suit le curseur et se souligne — plus distinctif qu'une
+    capsule, et conforme.
+
+    Deux registres seulement, tous deux dérivés de l'encre courante : ils sont
+    donc justes sur le clair comme sur le ciel, sans variante par fond.
+  */
   const variants = {
-    solid:
-      "bg-bronze text-blanc hover:bg-dore hover:text-charbon border border-transparent",
-    outline:
-      "bg-transparent text-bronze border border-bronze hover:bg-bronze hover:text-blanc",
-    ghost:
-      "bg-transparent text-charbon border border-charbon/20 hover:border-charbon hover:bg-charbon hover:text-ivoire",
-    light:
-      "bg-ivoire text-charbon border border-transparent hover:bg-dore hover:text-charbon",
+    // l'action principale : pleine, en négatif local
+    solid: "inverse px-6 py-3",
+    // l'action secondaire : un lien souligné, rien de plus
+    ghost: "ink link-underline",
   };
 
   const Tag = motion[as] || motion.a;
@@ -54,7 +61,7 @@ export default function MagneticButton({
       onMouseLeave={reset}
       style={{ x: sx, y: sy }}
       data-cursor="hover"
-      className={`inline-flex items-center gap-2.5 rounded-full px-6 py-3 text-[13px] font-semibold uppercase tracking-[0.1em] transition-colors duration-500 ease-nova ${variants[variant]} ${className}`}
+      className={`inline-flex items-center gap-2.5 text-[13px] font-semibold uppercase tracking-[0.1em] transition-colors duration-500 ease-nova ${variants[variant] ?? variants.ghost} ${className}`}
       {...rest}
     >
       {children}
