@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Plate, { Star } from "../Plate";
+import StarSky from "../StarSky";
 import { splitCharsRich } from "../../lib/text";
 import { palette } from "../../lib/tokens";
 
@@ -96,6 +97,12 @@ export default function Takeover() {
       className="relative h-[300vh]"
     >
       <div className="sticky top-0 flex h-stage items-center overflow-hidden">
+        {/*
+          LE CIEL. Il n'est pas un décor posé derrière le texte : c'est le
+          fond du récit lui-même (§03), et il n'existe que là où le site est
+          dans le ciel. Voir `StarSky` pour l'exception du §09.
+        */}
+        <StarSky seed={11} className="text-contraste" />
         <div className="edge grid w-full items-center gap-12 lg:grid-cols-[1fr_auto]">
           <div className="max-w-2xl">
             <p className="ink-40 mb-8 font-mono text-[11px] uppercase tracking-[0.2em]">

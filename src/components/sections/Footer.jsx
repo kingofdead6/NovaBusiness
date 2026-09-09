@@ -3,6 +3,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { contact, nav } from "../../data/site";
 import { splitChars } from "../../lib/text";
+import StarSky from "../StarSky";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -206,6 +207,8 @@ export default function Footer() {
       data-ground="ciel"
       className="relative flex flex-col overflow-hidden px-5 py-16 md:px-10 md:py-20"
     >
+      {/* le ciel du footer referme la boucle ouverte au chargement */}
+      <StarSky seed={47} className="text-contraste" />
       <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
         <div>
           <p className="ink-40 mb-4 font-mono text-[11px] uppercase tracking-[0.18em]">

@@ -113,7 +113,7 @@ export default function Navbar() {
             href="#top"
             data-cursor="hover"
             className="ink flex items-center gap-2 py-2"
-            aria-label="Nova Business, retour en haut"
+            aria-label="NOVA, retour en haut"
           >
             {/*
               La marque est une ÉTOILE dessinée (§05 : « un point avec quatre

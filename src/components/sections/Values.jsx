@@ -1,5 +1,6 @@
 import useReveal from "../../hooks/useReveal";
 import { values } from "../../data/site";
+import StarSky from "../StarSky";
 
 /**
  * ÉTAT 2 (suite) — TOUT OU RIEN
@@ -32,9 +33,12 @@ export default function Values() {
     <section
       ref={root}
       data-ground="ciel"
-      className="relative pb-40 pt-24 md:pb-56"
+      className="relative overflow-hidden pb-40 pt-24 md:pb-56"
     >
-      <div className="edge">
+      {/* le ciel continue : autre graine, donc autre semis, même monde */}
+      <StarSky seed={29} className="text-contraste" />
+
+      <div className="edge relative">
         <h2
           data-reveal="text"
           className="max-w-4xl font-display text-d2 font-black lowercase tracking-tight"
