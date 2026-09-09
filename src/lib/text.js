@@ -151,7 +151,28 @@ export function splitCharsRich(el) {
         */
         const text = child.textContent.replace(/\s+/g, " ");
         if (!text) return;
-        text.split("").forEach((character) => out.push(makeChar(character)));
+
+        /*
+          Les lettres sont groupées PAR MOT. Chaque `.mot` est insécable, si
+          bien que la ligne se coupe aux espaces et jamais au milieu d'un mot
+          — ce qui arrivait tant que chaque lettre était un `inline-block`
+          autonome. Les espaces restent des `.char` à part, hors des groupes.
+        */
+        let mot = null;
+        text.split("").forEach((character) => {
+          if (character === " ") {
+            mot = null;
+            out.push(makeChar(character));
+            return;
+          }
+          if (!mot) {
+            mot = document.createElement("span");
+            mot.className = "mot";
+            mot.setAttribute("aria-hidden", "true");
+            out.push(mot);
+          }
+          mot.appendChild(makeChar(character));
+        });
         return;
       }
 

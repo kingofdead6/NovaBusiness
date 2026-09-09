@@ -56,6 +56,8 @@ export default function Values() {
         ratio="1/1"
         parallax={7}
         alt="Planche gravée — le Scorpion, Hevelius"
+        data-reveal="plate"
+        data-reveal-start="top 80%"
         className="engraving-marge pointer-events-none absolute hidden opacity-[0.16] lg:block"
       />
 
@@ -66,6 +68,14 @@ export default function Values() {
         >
           tout, ou rien.
         </h2>
+
+        {/* le filet se TRACE : « tout se joue au trait » (§05) */}
+        <span
+          data-reveal="rule"
+          data-reveal-delay="0.25"
+          aria-hidden="true"
+          className="rule-ink mt-8 block h-px w-full border-t"
+        />
 
         <div className="mt-10 grid gap-x-16 gap-y-6 md:grid-cols-2">
           <p data-reveal="fade" className="ink-60 text-[17px] leading-relaxed">

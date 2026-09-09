@@ -105,8 +105,8 @@ export default function Navbar() {
         <div
           className={`relative flex items-center justify-between rounded-full py-2 pl-4 pr-2 transition-all duration-500 ease-nova md:pl-6 ${
             solid
-              ? "rule-ink border backdrop-blur-md"
-              : "border border-transparent backdrop-blur-sm"
+              ? "navbar-pilule navbar-pilule--dense rule-ink border backdrop-blur-md"
+              : "navbar-pilule border border-transparent backdrop-blur-sm"
           }`}
         >
           <a

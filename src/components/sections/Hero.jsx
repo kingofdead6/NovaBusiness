@@ -2,6 +2,10 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { splitWords, splitCharsRich } from "../../lib/text";
 import { clients } from "../../data/site";
+import Engraving from "../Engraving";
+import { Star } from "../Plate";
+import taureau from "../../assets/plates/taureau-trait.png";
+import cosmographia from "../../assets/plates/cosmographia-trait.png";
 
 /**
  * ÉTAT 1 — LE HERO (§07)
@@ -166,9 +170,44 @@ export default function Hero({ ready = true }) {
       id="top"
       ref={root}
       data-ground="clair"
-      className="relative flex min-h-[100svh] flex-col justify-between pb-12 pt-40 md:pb-16"
+      className="relative flex min-h-[100svh] flex-col justify-center gap-y-16 overflow-hidden pb-12 pt-36 md:pb-16"
     >
+      {/*
+        LES DEUX PLANCHES DU HERO.
+
+        Le §07 veut un hero « horizontal, très sobre : une phrase et beaucoup
+        de vide ». Les planches ne remplissent donc pas ce vide — elles le
+        BORDENT. Posées aux deux marges, largement débordantes et très pâles,
+        elles installent le monde astronomique sans rien disputer au titre.
+
+        Elles portent le tremblé du §05 (« la main reste visible ») et une
+        parallaxe de sens opposé : le duo respire quand on descend.
+      */}
+      <Engraving
+        src={taureau}
+        ratio="3/4"
+        parallax={10}
+        warp="fort"
+        alt=""
+        className="hero-plate-gauche pointer-events-none absolute hidden opacity-[0.13] lg:block"
+      />
+      <Engraving
+        src={cosmographia}
+        ratio="1/1"
+        parallax={-14}
+        warp="normal"
+        alt=""
+        className="hero-plate-droite pointer-events-none absolute hidden opacity-[0.16] lg:block"
+      />
+
       <div className="edge relative">
+        <p
+          data-fade
+          className="ink-40 mb-10 font-mono text-[11px] uppercase tracking-[0.2em]"
+        >
+          Agence digitale · Paris
+        </p>
+
         {/*
           Le titre est posé DEUX fois, superposé au pixel près : l'exemplaire
           du dessous est le vrai (animé, lu par les lecteurs d'écran), celui
@@ -197,15 +236,32 @@ export default function Hero({ ready = true }) {
               <span className="block">On rend visible ce qui est déjà là.</span>
             </p>
           </div>
+
+          <Star rays={4} className="hero-etoile pointer-events-none absolute hidden h-7 w-7 lg:block" />
         </div>
 
-        <p
-          data-fade
-          className="ink-60 mt-10 max-w-lg text-[17px] leading-relaxed"
-        >
-          Image de marque, site, application, référencement, contenu. La chaîne
-          complète, ou rien.
-        </p>
+        {/*
+          Le sous-titre porte le RETOURNEMENT du §02 — l'étoile, c'est le
+          client — et la position « tout ou rien » du §01. Deux colonnes : la
+          promesse à gauche, ce qu'elle recouvre à droite, en voix secondaire.
+        */}
+        <div className="mt-12 grid gap-10 md:mt-14 md:grid-cols-[1fr_auto] md:items-end md:gap-20">
+          <p data-fade className="ink-60 max-w-lg text-[17px] leading-relaxed">
+            Votre marque est déjà bonne. Elle n'est simplement pas encore
+            impossible à manquer. On s'occupe de la chaîne complète —
+            <span className="ink"> ou de rien du tout.</span>
+          </p>
+
+          <ul
+            data-fade
+            className="ink-40 grid grid-cols-2 gap-x-10 gap-y-2 font-mono text-[11px] uppercase tracking-[0.14em] md:text-right"
+          >
+            <li>Image de marque</li>
+            <li>Site &amp; application</li>
+            <li>Référencement</li>
+            <li>Contenu &amp; social</li>
+          </ul>
+        </div>
       </div>
 
       {/*
@@ -216,8 +272,10 @@ export default function Hero({ ready = true }) {
         c'est l'écart d'échelle avec le titre qui la rend crédible — pas un
         traitement graphique.
       */}
-      <div data-fade className="edge relative">
-        <p className="ink-40 font-mono text-[11px] uppercase tracking-[0.18em]">
+      <div data-fade className="edge relative mt-auto">
+        <p className="ink-40 rule-ink border-t pt-5 font-mono text-[11px] uppercase tracking-[0.18em]">
+          <span className="ink-60">Ils nous font confiance</span>
+          <span className="mx-3">·</span>
           {clients.join("  ·  ")}
         </p>
       </div>

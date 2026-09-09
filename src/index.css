@@ -231,21 +231,29 @@
     et en le réautorisant sur les seules lettres-espaces, que le découpeur
     marque d'un `data-space`.
   */
-  [data-split="true"] {
-    white-space: nowrap;
-  }
-
-  [data-split="true"] .char {
-    white-space: pre;
-  }
+  /*
+    `nowrap` empêcherait le titre de passer à la ligne — or il DOIT le faire,
+    c'est `max-w-[16ch]` qui règle sa mesure. On n'interdit donc pas le retour
+    à la ligne : on le limite aux espaces (voir la règle sur `.char`
+    ci-dessous), ce qui suffit à ne jamais couper un mot.
+  */
 
   /*
-    La coupure est autorisée APRÈS l'espace : `word-spacing` garde sa chasse
-    et le navigateur peut y passer à la ligne, sans jamais couper un mot.
+    LES MOTS NE SE COUPENT JAMAIS.
+
+    `splitCharsRich` fait de chaque lettre un `inline-block` : le navigateur
+    peut alors passer à la ligne ENTRE DEUX LETTRES d'un même mot (« déj / à »).
+
+    Régler cela lettre par lettre s'est révélé illusoire — `white-space` sur
+    l'espace fuyait sur ses voisines. La solution est structurelle : le
+    découpeur groupe les lettres d'un même mot dans un `.mot`, et c'est CE
+    groupe qui est insécable. Le titre se coupe donc aux espaces, comme
+    n'importe quel texte, tout en gardant une lettre par span pour le
+    magnétisme.
   */
-  [data-split="true"] .char[data-space] {
-    white-space: normal;
-    word-break: break-all;
+  [data-split="true"] .mot {
+    display: inline-block;
+    white-space: nowrap;
   }
 
   .hero-spot .char {
@@ -316,9 +324,9 @@
   */
   .engraving-img {
     -webkit-mask-image: var(--plate),
-      radial-gradient(115% 105% at 50% 45%, #000 40%, #00000080 70%, transparent 94%);
+      radial-gradient(88% 82% at 50% 48%, #000 0%, #000000b3 42%, #00000059 68%, transparent 88%);
     mask-image: var(--plate),
-      radial-gradient(115% 105% at 50% 45%, #000 40%, #00000080 70%, transparent 94%);
+      radial-gradient(88% 82% at 50% 48%, #000 0%, #000000b3 42%, #00000059 68%, transparent 88%);
     -webkit-mask-size: contain, cover;
     mask-size: contain, cover;
     -webkit-mask-composite: source-in;
@@ -349,6 +357,65 @@
     right: -14vw;
     width: 46vw;
     max-width: 44rem;
+  }
+
+  /*
+    LA PILULE FLOTTANTE.
+
+    Son fond est dérivé du FOND COURANT, pas d'une couleur fixe : elle reste
+    donc lisible sur le clair comme sur le ciel, et elle suit la bascule sans
+    variante. Elle était devenue entièrement transparente quand les anciens
+    jetons ont été retirés.
+  */
+  .navbar-pilule {
+    background-color: color-mix(in oklab, transparent 62%, var(--ground-bg));
+  }
+
+  .navbar-pilule--dense {
+    background-color: color-mix(in oklab, transparent 14%, var(--ground-bg));
+  }
+
+  /*
+    LES PLANCHES DU HERO.
+
+    Elles BORDENT le vide plutôt que de le remplir : le §07 veut « une phrase
+    et beaucoup de vide », donc elles débordent largement des deux marges et
+    n'entrent jamais dans la colonne de texte.
+
+    Écrites ici et non en classes utilitaires : les marges négatives en `vw`
+    demandent une syntaxe arbitraire fragile, qui ne s'appliquait pas.
+  */
+  .hero-plate-gauche {
+    top: 12%;
+    left: -18vw;
+    width: 42vw;
+    max-width: 38rem;
+  }
+
+  .hero-plate-droite {
+    top: 4%;
+    right: -14vw;
+    width: 36vw;
+    max-width: 34rem;
+  }
+
+  /*
+    Les planches du hero se dissolvent PLUS TÔT que les autres : elles bordent
+    une zone de lecture, donc leur cadre ne doit jamais se deviner. Le masque
+    remplace celui, plus large, des planches en pleine section.
+  */
+  .hero-plate-gauche .engraving-img,
+  .hero-plate-droite .engraving-img {
+    -webkit-mask-image: var(--plate),
+      radial-gradient(75% 70% at 50% 50%, #000 0%, #00000066 46%, transparent 78%);
+    mask-image: var(--plate),
+      radial-gradient(75% 70% at 50% 50%, #000 0%, #00000066 46%, transparent 78%);
+  }
+
+  /* l'étoile ponctue la fin du titre, comme un renvoi de planche */
+  .hero-etoile {
+    top: -1.5rem;
+    left: calc(16ch + 1.5rem);
   }
 
   /* ====================================================================== */

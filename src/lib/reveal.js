@@ -13,6 +13,13 @@ gsap.registerPlugin(ScrollTrigger);
  *                          un masque, décalés les uns après les autres.
  *   data-reveal="fade"   → simple montée en fondu (paragraphes, boutons…).
  *   data-reveal="lines"  → chaque enfant direct monte en fondu, en cascade.
+ *   data-reveal="plate"  → une planche gravée ÉMERGE : elle gagne son opacité
+ *                          et se dilate à peine, comme une image qui se
+ *                          révèle sur le papier. C'est l'embrasement du §02
+ *                          appliqué au dessin — jamais une lueur.
+ *   data-reveal="rule"   → un filet se TRACE de gauche à droite. Le §05 veut
+ *                          que « tout se joue au trait » : un trait qui
+ *                          apparaît doit donc se dessiner, pas se fondre.
  *
  * Options par élément (facultatives) :
  *   data-reveal-delay="0.2"   décalage avant le départ
@@ -54,6 +61,18 @@ function revealOne(el) {
   } else if (kind === "lines") {
     targets = Array.from(el.children);
     from = { y: 26, opacity: 0, duration: 0.9, ease: "expo.out" };
+  } else if (kind === "plate") {
+    /*
+      La planche n'arrive pas par le bas : elle ÉMERGE sur place. Le léger
+      agrandissement (1.04 → 1) donne l'impression d'une image qui se fixe,
+      et l'opacité cible est reprise du style de l'élément — chaque planche a
+      la sienne, très basse, pour rester en marge.
+    */
+    targets = [el];
+    from = { opacity: 0, scale: 1.04, duration: 1.6, ease: "expo.out" };
+  } else if (kind === "rule") {
+    targets = [el];
+    from = { scaleX: 0, transformOrigin: "left center", duration: 1.1, ease: "expo.out" };
   } else {
     targets = [el];
     from = { y: 22, opacity: 0, duration: 0.9, ease: "expo.out" };
@@ -87,7 +106,16 @@ function revealOne(el) {
       premier scroll. Les propriétés de départ (y / yPercent) sont remises à
       zéro par l'animation elle-même.
     */
-    clearProps: "opacity",
+    /*
+      On ne purge QUE l'opacité, et JAMAIS pour une planche : la sienne est
+      fixée par une classe (très basse, pour rester en marge), et la purger
+      la ferait sauter à 1 à la fin de l'animation.
+
+      Un `clearProps: "transform"` effacerait par ailleurs les
+      transformations qu'une AUTRE animation pilote sur la même cible — la
+      parallaxe des planches, par exemple.
+    */
+    clearProps: kind === "plate" ? "" : "opacity",
     scrollTrigger: {
       trigger: el,
       start,

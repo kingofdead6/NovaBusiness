@@ -43,11 +43,18 @@ for(let i=0;i<=60;i++){
     const lum=(c)=>{const v=toRgb(c).map(x=>{x/=255;return x<=0.03928?x/12.92:Math.pow((x+0.055)/1.055,2.4);});
       return 0.2126*v[0]+0.7152*v[1]+0.0722*v[2];};
     // real painted backdrop: walk up past transparent backgrounds
+    /*
+      L'opacité doit être lue APRÈS résolution par le navigateur : les couleurs
+      arrivent désormais en `oklab(... / a)`, dont un simple `match` de nombres
+      lisait le mauvais champ — un bouton parfaitement contrasté était compté
+      en échec parce qu'on remontait au-delà de son propre fond.
+    */
+    const alphaOf=(c)=>{cx.clearRect(0,0,1,1);cx.fillStyle=c;cx.fillRect(0,0,1,1);
+      return cx.getImageData(0,0,1,1).data[3]/255;};
     const backdrop=(el)=>{let n=el;
       while(n&&n!==document.documentElement){
         const bg=getComputedStyle(n).backgroundColor;
-        const m=bg.match(/[\d.]+/g);
-        if(m){const a=m.length>3?parseFloat(m[3]):1; if(a>=0.5) return bg;}
+        if(bg&&bg!=='transparent'&&alphaOf(bg)>=0.5) return bg;
         n=n.parentElement;}
       return getComputedStyle(document.body).backgroundColor;};
     const els=[...document.querySelectorAll('h1,h2,h3,p,a,li,span,address')].filter(e=>{

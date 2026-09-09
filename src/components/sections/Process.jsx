@@ -122,6 +122,8 @@ export default function Process() {
         ratio="1/1"
         parallax={6}
         alt="Planche gravée — diagramme annoté, Cosmographia d'Apianus"
+        data-reveal="plate"
+        data-reveal-start="top 80%"
         className="engraving-marge pointer-events-none absolute hidden opacity-[0.22] lg:block"
       />
 
@@ -132,6 +134,13 @@ export default function Process() {
         >
           huit semaines, de bout en bout.
         </h2>
+
+        <span
+          data-reveal="rule"
+          data-reveal-delay="0.25"
+          aria-hidden="true"
+          className="rule-ink mt-8 block h-px w-full border-t"
+        />
 
         <ol className="mt-24 space-y-16 md:space-y-20">
           {steps.map((step, i) => (
