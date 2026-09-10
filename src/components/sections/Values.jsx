@@ -1,6 +1,7 @@
 import useReveal from "../../hooks/useReveal";
 import { values } from "../../data/site";
 import StarSky from "../StarSky";
+import Horizon from "../Horizon";
 import Engraving from "../Engraving";
 import scorpion from "../../assets/plates/scorpion-trait.png";
 
@@ -122,6 +123,20 @@ export default function Values() {
           ))}
         </ul>
       </div>
+
+      {/*
+        L'HORIZON — l'illustration du client.
+
+        Elle ferme l'immersion, EN PLEINE LARGEUR et sans cadre : son ciel
+        étoilé prolonge celui de la section, et sa carte annonce le fond clair
+        qui revient juste après. Elle n'est donc pas une image POSÉE sur la
+        page, elle en est la charnière — ce que son titre dit littéralement.
+
+        Placée ici plutôt qu'à la sortie du ciel : là-bas elle arrivait juste
+        APRÈS le balayage et redisait en fixe ce que le site venait de faire
+        en mouvement. Ici elle le PRÉPARE.
+      */}
+      <Horizon />
     </section>
   );
 }

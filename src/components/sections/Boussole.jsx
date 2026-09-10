@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import horizon from "../../assets/plates/horizon.jpg";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -94,7 +93,6 @@ export default function Boussole({ variante = "seuil" }) {
     const anneauExt = el.querySelector("[data-anneau-ext]");
     const reperes = el.querySelectorAll("[data-repere]");
     const mot = el.querySelector("[data-mot]");
-    const image = el.querySelector("[data-horizon]");
 
     /*
       Mouvement réduit : on pose l'état FINAL — rose tracée, aiguille au nord.
@@ -107,7 +105,6 @@ export default function Boussole({ variante = "seuil" }) {
       });
       if (aiguille) aiguille.style.transform = "rotate(0deg)";
       if (mot) mot.style.opacity = "1";
-      if (image) image.style.opacity = "1";
       return undefined;
     }
 
@@ -209,34 +206,6 @@ export default function Boussole({ variante = "seuil" }) {
         },
       });
 
-      /*
-        L'ILLUSTRATION A SON PROPRE DÉCLENCHEUR.
-
-        Elle était pilotée par la progression de la section, laquelle démarre
-        bien après que le ciel a commencé à se retirer : l'image restait donc
-        quasi transparente au moment précis du balayage, et la bande claire
-        paraissait vide.
-
-        Un déclencheur distinct, calé sur sa PROPRE entrée dans la fenêtre, la
-        rend présente dès qu'elle est visible — les deux gestes ne se disputent
-        plus un même calendrier.
-      */
-      if (image) {
-        gsap.fromTo(
-          image,
-          { opacity: 0 },
-          {
-            opacity: 0.92,
-            ease: "none",
-            scrollTrigger: {
-              trigger: image,
-              start: "top bottom",
-              end: "top 55%",
-              scrub: 0.5,
-            },
-          }
-        );
-      }
     }, el);
 
     return () => ctx.revert();
@@ -252,29 +221,6 @@ export default function Boussole({ variante = "seuil" }) {
       }`}
     >
       <div className="edge flex flex-col items-center gap-8">
-        {/*
-          L'ILLUSTRATION DU CLIENT — « les deux fonds au repos, l'horizon comme
-          charnière ». Elle n'apparaît qu'à la SORTIE du ciel, là où le site
-          vient précisément de faire ce qu'elle représente : traverser
-          l'horizon entre les deux fonds.
-
-          NOTE DE CONFORMITÉ : elle porte des figures humaines contemporaines,
-          que le §09 interdit — l'exception ne couvrant que les figures gravées
-          de constellation. Elle est utilisée sur demande explicite du client,
-          qui tranche donc ce point.
-        */}
-        {retour ? (
-          <figure data-horizon className="w-full max-w-3xl opacity-0">
-            <img
-              src={horizon}
-              alt="L'horizon comme charnière : le ciel étoilé au-dessus, la carte au-dessous"
-              loading="lazy"
-              decoding="async"
-              className="w-full"
-            />
-          </figure>
-        ) : null}
-
         <svg
           viewBox="-60 -60 120 120"
           className="w-[62vw] max-w-[19rem] sm:max-w-[22rem]"

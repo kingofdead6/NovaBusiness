@@ -19,7 +19,26 @@ const rows=[];
 for(let i=0;i<=60;i++){
   const y = Math.round((h-900)*(i/60));
   await p.evaluate(v=>window.scrollTo(0,v), y);
+  /*
+    On attend que le SCRUB soit vraiment retombé avant de mesurer : GSAP
+    continue d'assouplir `--ground` après l'arrêt du défilement, si bien
+    qu'une mesure trop précoce attrapait la pilule et le bouton à mi-mélange
+    — un faux échec intermittent, mais invisible à l'œil puisque le voile
+    opaque couvre encore la zone à cet instant.
+  */
   await p.waitForTimeout(130);
+  await p.evaluate(() => new Promise((r) => {
+    let stable = 0, last = null;
+    // plafond de sécurité : on ne bloque jamais si la valeur ne se fige pas
+    const fin = performance.now() + 900;
+    const tick = () => {
+      if (performance.now() > fin) return r();
+      const g = getComputedStyle(document.documentElement).getPropertyValue('--ground');
+      if (g === last) { if (++stable > 6) return r(); } else { stable = 0; last = g; }
+      requestAnimationFrame(tick);
+    };
+    tick();
+  }));
   const r = await p.evaluate(()=>{
     /*
       Pendant le balayage, un voile OPAQUE couvre tout ou partie de l'écran :

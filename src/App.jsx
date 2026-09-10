@@ -80,12 +80,11 @@ export default function App() {
           */}
           <Boussole />
           <Takeover />
+          <Values />
           {/*
             LE RETOUR. Le ciel vient de se retirer : la boussole marque la
-            sortie comme elle avait marqué l'entrée, l'aiguille tournant cette
-            fois dans l'autre sens. C'est ici que l'illustration du client
-            prend place — elle montre exactement ce que le site vient de
-            faire : traverser l'horizon entre les deux fonds.
+            sortie comme elle avait marqué l'entrée, l'aiguille tournant
+            cette fois dans l'autre sens.
           */}
           <Boussole variante="retour" />
           <Services />

@@ -104,7 +104,7 @@ export default function Navbar() {
       >
         <div
           data-menu-open={open ? "true" : undefined}
-          className={`navbar-corps relative flex items-center justify-between rounded-full py-2 pl-4 pr-2 transition-all duration-500 ease-nova md:pl-6 ${
+          className={`navbar-corps relative flex items-center justify-between navbar-transition rounded-full py-2 pl-4 pr-2 md:pl-6 ${
             solid
               ? "navbar-pilule navbar-pilule--dense rule-ink border backdrop-blur-md"
               : "navbar-pilule border border-transparent backdrop-blur-sm"
