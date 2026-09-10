@@ -43,6 +43,8 @@ const WARP = {
   doux: "url(#plate-warp-doux)",
   normal: "url(#plate-warp)",
   fort: "url(#plate-warp-fort)",
+  /* amplitude pilotée au défilement — voir `src/lib/warp.js` */
+  scroll: "url(#plate-warp-scroll)",
 };
 
 export default function Engraving({

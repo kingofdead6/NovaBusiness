@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { initGround } from "./lib/ground";
+import { initWarp } from "./lib/warp";
 
 import SmoothScroll from "./components/SmoothScroll";
 import Preloader from "./components/Preloader";
@@ -37,7 +38,12 @@ export default function App() {
   */
   useEffect(() => {
     if (!ready) return undefined;
-    return initGround(document);
+    const stopGround = initGround(document);
+    const stopWarp = initWarp();
+    return () => {
+      stopGround();
+      stopWarp();
+    };
   }, [ready]);
 
   return (

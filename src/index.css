@@ -21,6 +21,17 @@
   initial-value: 0;
 }
 
+/*
+  `--blaze` doit être un NOMBRE déclaré pour que GSAP puisse l'interpoler :
+  sans `@property`, une propriété personnalisée est une chaîne et la montée en
+  contraste se ferait d'un coup. Déclarée hors `@layer`, comme `--ground`.
+*/
+@property --blaze {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}
+
 @layer base {
   /*
     Les couleurs de la palette (`--clair`, `--ciel`, `--contraste`, `--noir`)
@@ -416,6 +427,22 @@
   .hero-etoile {
     top: -1.5rem;
     left: calc(16ch + 1.5rem);
+  }
+
+  /*
+    L'EMBRASEMENT.
+
+    `--blaze` va de 0 (à un pas du fond, donc invisible) à 1 (encre pleine).
+    La couleur en est DÉRIVÉE plutôt qu'animée directement : elle suit ainsi
+    `--ground` en permanence, et l'effet reste juste que la lettre s'allume
+    sur le clair ou dans le ciel.
+  */
+  [data-reveal="blaze"] .char {
+    color: color-mix(
+      in oklab,
+      var(--ground-bg) calc((1 - var(--blaze, 1)) * 90%),
+      var(--ground-ink)
+    );
   }
 
   /* ====================================================================== */

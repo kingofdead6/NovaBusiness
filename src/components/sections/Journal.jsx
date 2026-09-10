@@ -7,6 +7,7 @@ import {
   useReducedMotion,
 } from "framer-motion";
 import Media from "../Media";
+import useReveal from "../../hooks/useReveal";
 import { journal } from "../../data/site";
 
 const EASE = [0.16, 1, 0.3, 1];
@@ -96,7 +97,7 @@ function JournalCard({ post, i }) {
         </h3>
 
         {/* filet qui se trace au survol */}
-        <span className="mt-4 block h-px w-full origin-left scale-x-0 bg-ciel/20 transition-transform duration-700 ease-nova group-hover:scale-x-100" />
+        <span className="rule-ink mt-4 block h-px w-full origin-left scale-x-0 border-t transition-transform duration-700 ease-nova group-hover:scale-x-100" />
       </a>
     </motion.article>
   );
@@ -109,9 +110,15 @@ export default function Journal() {
     offset: ["start 0.9", "start 0.45"],
   });
   const ruleScale = useSpring(scrollYProgress, { stiffness: 90, damping: 26 });
+  const revealRoot = useReveal();
 
   return (
-    <section id="journal" className="bg-[var(--ground-bg)] py-24 md:py-32">
+    <section
+      ref={revealRoot}
+      id="journal"
+      data-ground="clair"
+      className="offscreen-idle relative overflow-hidden py-24 md:py-32"
+    >
       <div className="edge">
         <div ref={headRef} className="mb-12">
           <div className="flex items-end justify-between gap-6">
@@ -121,7 +128,7 @@ export default function Journal() {
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
-                className="eyebrow mb-6 block"
+                className="ink-40 mb-6 block font-mono text-[11px] uppercase tracking-[0.18em]"
               >
                 Journal
               </motion.span>
@@ -145,11 +152,11 @@ export default function Journal() {
           {/* filet qui se trace au scroll */}
           <motion.div
             style={{ scaleX: ruleScale }}
-            className="mt-8 h-px w-full origin-left bg-ciel/15"
+            className="rule-ink mt-8 h-px w-full origin-left border-t"
           />
         </div>
 
-        <div className="grid gap-8 md:grid-cols-3">
+        <div data-reveal="lines" data-reveal-stagger="0.1" className="grid gap-8 md:grid-cols-3">
           {journal.map((post, i) => (
             <JournalCard key={post.title} post={post} i={i} />
           ))}

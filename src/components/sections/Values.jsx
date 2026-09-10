@@ -55,6 +55,7 @@ export default function Values() {
         src={scorpion}
         ratio="1/1"
         parallax={7}
+        warp="scroll"
         alt="Planche gravée — le Scorpion, Hevelius"
         data-reveal="plate"
         data-reveal-start="top 80%"
@@ -62,8 +63,14 @@ export default function Values() {
       />
 
       <div className="edge relative">
+        {/*
+          La position du §01 s'énonce par l'EMBRASEMENT : les lettres gagnent
+          leur contraste au lieu d'arriver en fondu. C'est le geste
+          fondamental du site (§07), réservé aux deux phrases qui portent le
+          récit — ici et dans l'immersion.
+        */}
         <h2
-          data-reveal="text"
+          data-reveal="blaze"
           className="max-w-4xl font-display text-d2 font-black lowercase tracking-tight"
         >
           tout, ou rien.

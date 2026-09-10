@@ -87,6 +87,37 @@ export default function PlateDistortion() {
             yChannelSelector="G"
           />
         </filter>
+
+        {/*
+          LE TREMBLÉ QUI RÉPOND AU DÉFILEMENT.
+
+          Celui-ci est le seul dont l'amplitude bouge : `src/lib/warp.js` pilote
+          l'attribut `scale` du `feDisplacementMap` au SCRUB, si bien que la
+          planche se déforme quand on la traverse et se repose quand on
+          s'arrête.
+
+          Ce n'est donc PAS une animation en boucle (§09) : rien ne tourne tout
+          seul, le mouvement appartient au geste de l'utilisateur — comme le
+          fond, comme les parallaxes. C'est aussi ce que demande le §07 :
+          « chaque mouvement peut se produire à l'aller et au retour ».
+        */}
+        <filter id="plate-warp-scroll" x="-14%" y="-14%" width="128%" height="128%">
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.008 0.014"
+            numOctaves="2"
+            seed="43"
+            result="bruit"
+          />
+          <feDisplacementMap
+            data-warp-scroll
+            in="SourceGraphic"
+            in2="bruit"
+            scale="4"
+            xChannelSelector="R"
+            yChannelSelector="G"
+          />
+        </filter>
       </defs>
     </svg>
   );

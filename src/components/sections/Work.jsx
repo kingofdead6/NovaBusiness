@@ -95,12 +95,13 @@ export default function Work() {
       id="realisations"
       aria-roledescription="carrousel"
       aria-label="Réalisations récentes"
-      className="relative overflow-hidden bg-[var(--ground-bg)] py-24 md:py-32"
+      data-ground="clair"
+      className="offscreen-idle relative overflow-hidden py-24 md:py-32"
     >
       <div className="edge">
         <div className="mb-12 flex items-end justify-between gap-6">
           <div>
-            <span data-reveal="fade" className="eyebrow mb-6 block">
+            <span data-reveal="fade" className="ink-40 mb-6 block font-mono text-[11px] uppercase tracking-[0.18em]">
               Réalisations
             </span>
             <TypedHeading

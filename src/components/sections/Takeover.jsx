@@ -150,7 +150,7 @@ export default function Takeover() {
               src={taureau}
               ratio="4/5"
               parallax={5}
-              warp="doux"
+              warp="scroll"
               className="relative"
               alt="Planche gravée — le Taureau, Uranometria de Bayer, 1603"
               label="Bayer · Uranometria · 1603"
