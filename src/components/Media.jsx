@@ -60,11 +60,21 @@ export default function Media({
     >
       <div ref={inner} className="absolute inset-0 h-full w-full scale-[1.12]">
         {src ? (
-          <img
-            src={src}
-            alt={alt}
-            loading="lazy"
-            className={`h-full w-full object-cover ${imgClassName}`}
+          /*
+            L'illustration est DÉTOURÉE (trait sur fond transparent) : on la
+            peint donc dans l'encre courante en s'en servant de masque, comme
+            les planches gravées. Elle suit ainsi les deux fonds au lieu de
+            poser un rectangle d'une autre couleur (§04).
+
+            `role="img"` + `aria-label` gardent l'accessibilité, puisque ce
+            n'est plus une balise <img>.
+          */
+          <div
+            role={alt ? "img" : undefined}
+            aria-label={alt || undefined}
+            aria-hidden={alt ? undefined : "true"}
+            className={`media-trait h-full w-full ${imgClassName}`}
+            style={{ "--plate": `url(${src})` }}
           />
         ) : (
           <div

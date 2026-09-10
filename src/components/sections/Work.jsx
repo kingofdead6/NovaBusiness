@@ -2,6 +2,8 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import useReveal from "../../hooks/useReveal";
 import TypedHeading from "../TypedHeading";
+import Engraving from "../Engraving";
+import taureau from "../../assets/plates/taureau-trait.png";
 import Media from "../Media";
 import MagneticButton from "../MagneticButton";
 import { projects } from "../../data/site";
@@ -98,6 +100,18 @@ export default function Work() {
       data-ground="clair"
       className="offscreen-idle relative overflow-hidden py-24 md:py-32"
     >
+      {/* BAYER — le Taureau accompagne les réalisations */}
+      <Engraving
+        src={taureau}
+        ratio="3/4"
+        parallax={9}
+        warp="scroll"
+        alt=""
+        data-reveal="plate"
+        data-reveal-start="top 80%"
+        className="engraving-marge-gauche pointer-events-none absolute opacity-[0.13] lg:opacity-[0.12]"
+      />
+
       <div className="edge">
         <div className="mb-12 flex items-end justify-between gap-6">
           <div>

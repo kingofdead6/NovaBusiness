@@ -4,6 +4,8 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { contact, nav } from "../../data/site";
 import { splitChars } from "../../lib/text";
 import StarSky from "../StarSky";
+import Engraving from "../Engraving";
+import scorpion from "../../assets/plates/scorpion-trait.png";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -209,6 +211,19 @@ export default function Footer() {
     >
       {/* le ciel du footer referme la boucle ouverte au chargement */}
       <StarSky seed={47} className="text-contraste" />
+
+      {/*
+        Une dernière planche dans le ciel de clôture, très pâle : elle ferme
+        le monde comme elle l'avait ouvert dans l'immersion.
+      */}
+      <Engraving
+        src={scorpion}
+        ratio="1/1"
+        parallax={5}
+        warp="normal"
+        alt=""
+        className="engraving-marge-gauche pointer-events-none absolute opacity-[0.10]"
+      />
       <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
         <div>
           <p className="ink-40 mb-4 font-mono text-[11px] uppercase tracking-[0.18em]">

@@ -379,6 +379,26 @@
   }
 
   /*
+    La variante GAUCHE. Alterner les côtés d'une section à l'autre évite que
+    les planches ne forment une colonne : le regard les rencontre tantôt à
+    droite, tantôt à gauche, comme des feuillets posés en marge d'un cahier.
+  */
+  .engraving-marge-gauche {
+    top: 26%;
+    left: -34vw;
+    width: 92vw;
+  }
+
+  @media (min-width: 1024px) {
+    .engraving-marge-gauche {
+      top: 30%;
+      left: -13vw;
+      width: 42vw;
+      max-width: 40rem;
+    }
+  }
+
+  /*
     LA PILULE FLOTTANTE.
 
     Son fond est dérivé du FOND COURANT, pas d'une couleur fixe : elle reste
@@ -435,16 +455,23 @@
     illisible. Elles restent très pâles, donc elles habitent le fond sans
     disputer la lecture.
   */
+  /*
+    SUR MOBILE les planches sont la SEULE image de l'écran : elles doivent
+    donc se voir. Elles sont plus grandes, plus contrastées, et surtout
+    placées là où le texte ne passe pas — l'une en haut à droite, au-dessus
+    du titre, l'autre en bas à gauche, sous le bloc de preuve.
+  */
   .hero-plate-gauche {
-    top: 8%;
-    left: -34vw;
-    width: 86vw;
+    top: auto;
+    bottom: -6%;
+    left: -26vw;
+    width: 82vw;
   }
 
   .hero-plate-droite {
-    top: 2%;
-    right: -30vw;
-    width: 78vw;
+    top: 1%;
+    right: -22vw;
+    width: 72vw;
   }
 
   @media (min-width: 1024px) {
@@ -468,12 +495,27 @@
     une zone de lecture, donc leur cadre ne doit jamais se deviner. Le masque
     remplace celui, plus large, des planches en pleine section.
   */
+  /*
+    Le masque de dissolution est plus LARGE sur mobile : le repli serré
+    mangeait presque tout le trait, et il ne restait qu'une tache. Sur grand
+    écran il se resserre, puisque la planche y borde une zone de lecture.
+  */
   .hero-plate-gauche .engraving-img,
   .hero-plate-droite .engraving-img {
     -webkit-mask-image: var(--plate),
-      radial-gradient(75% 70% at 50% 50%, #000 0%, #00000066 46%, transparent 78%);
+      radial-gradient(70% 62% at 50% 50%, #000 0%, #000000b3 40%, #00000040 70%, transparent 88%);
     mask-image: var(--plate),
-      radial-gradient(75% 70% at 50% 50%, #000 0%, #00000066 46%, transparent 78%);
+      radial-gradient(70% 62% at 50% 50%, #000 0%, #000000b3 40%, #00000040 70%, transparent 88%);
+  }
+
+  @media (min-width: 1024px) {
+    .hero-plate-gauche .engraving-img,
+    .hero-plate-droite .engraving-img {
+      -webkit-mask-image: var(--plate),
+        radial-gradient(75% 70% at 50% 50%, #000 0%, #00000066 46%, transparent 78%);
+      mask-image: var(--plate),
+        radial-gradient(75% 70% at 50% 50%, #000 0%, #00000066 46%, transparent 78%);
+    }
   }
 
   /* l'étoile ponctue la fin du titre, comme un renvoi de planche */
@@ -512,6 +554,29 @@
       radial-gradient(58% 54% at 50% 50%, #000 0%, #00000059 40%, transparent 74%);
     mask-image: var(--plate),
       radial-gradient(58% 54% at 50% 50%, #000 0%, #00000059 40%, transparent 74%);
+  }
+
+  /*
+    LES ILLUSTRATIONS DÉTOURÉES.
+
+    Même principe que les planches : le fichier ne se voit pas lui-même, il
+    sert de MASQUE à un aplat de l'encre courante. L'illustration suit donc le
+    fond, et le site ne peint jamais plus de deux couleurs (§04).
+
+    `contain` et non `cover` : ces dessins ont une composition, les rogner
+    couperait le sujet.
+  */
+  .media-trait {
+    background-color: var(--ground-ink);
+    -webkit-mask-image: var(--plate);
+    mask-image: var(--plate);
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    opacity: 0.78;
   }
 
   /* ====================================================================== */

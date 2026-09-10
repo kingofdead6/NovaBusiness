@@ -4,6 +4,8 @@ import Media from "../Media";
 import { initReveals } from "../../lib/reveal";
 import TypedHeading from "../TypedHeading";
 import { services } from "../../data/site";
+import Engraving from "../Engraving";
+import scorpion from "../../assets/plates/scorpion-trait.png";
 
 /**
  * SECTION 05 — SERVICES
@@ -46,6 +48,24 @@ export default function Services() {
       data-ground="clair"
       className="relative pb-24 pt-28 md:pb-32 md:pt-36"
     >
+      {/*
+        HEVELIUS, LE SCORPION — en marge gauche du sommaire.
+
+        ATTENTION : la section ne doit JAMAIS recevoir `overflow-hidden`, il
+        casserait le `position: sticky` de l'empilement des cartes. La planche
+        est donc bornée par son propre masque, pas par un rognage du parent.
+      */}
+      <Engraving
+        src={scorpion}
+        ratio="1/1"
+        parallax={8}
+        warp="scroll"
+        alt=""
+        data-reveal="plate"
+        data-reveal-start="top 80%"
+        className="engraving-marge-gauche pointer-events-none absolute opacity-[0.14] lg:opacity-[0.12]"
+      />
+
       <div className="edge relative z-10">
         <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div className="max-w-xl">

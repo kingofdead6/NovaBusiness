@@ -8,6 +8,8 @@ import {
 } from "framer-motion";
 import Media from "../Media";
 import useReveal from "../../hooks/useReveal";
+import Engraving from "../Engraving";
+import cosmographia from "../../assets/plates/cosmographia-trait.png";
 import { journal } from "../../data/site";
 
 const EASE = [0.16, 1, 0.3, 1];
@@ -119,6 +121,17 @@ export default function Journal() {
       data-ground="clair"
       className="offscreen-idle relative overflow-hidden py-24 md:py-32"
     >
+      {/* APIANUS — le diagramme annoté accompagne les articles */}
+      <Engraving
+        src={cosmographia}
+        ratio="1/1"
+        parallax={6}
+        warp="normal"
+        alt=""
+        data-reveal="plate"
+        data-reveal-start="top 80%"
+        className="engraving-marge pointer-events-none absolute opacity-[0.13] lg:opacity-[0.16]"
+      />
       <div className="edge">
         <div ref={headRef} className="mb-12">
           <div className="flex items-end justify-between gap-6">

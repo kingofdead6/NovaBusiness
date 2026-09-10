@@ -189,7 +189,7 @@ export default function Hero({ ready = true }) {
         parallax={10}
         warp="fort"
         alt=""
-        className="hero-plate-gauche pointer-events-none absolute opacity-[0.10] lg:opacity-[0.13]"
+        className="hero-plate-gauche pointer-events-none absolute opacity-[0.30] sm:opacity-[0.18] lg:opacity-[0.14]"
       />
       <Engraving
         src={cosmographia}
@@ -197,7 +197,7 @@ export default function Hero({ ready = true }) {
         parallax={-14}
         warp="normal"
         alt=""
-        className="hero-plate-droite pointer-events-none absolute hidden opacity-[0.16] sm:block"
+        className="hero-plate-droite pointer-events-none absolute opacity-[0.26] sm:opacity-[0.18]"
       />
 
       <div className="edge relative">
