@@ -556,6 +556,19 @@
       radial-gradient(58% 54% at 50% 50%, #000 0%, #00000059 40%, transparent 74%);
   }
 
+  /*
+    L'AIGUILLE DE LA BOUSSOLE.
+
+    `transform-box: fill-box` + `transform-origin: center` : sans ces deux
+    lignes, un `rotate()` sur un groupe SVG pivote autour de l'ORIGINE DU
+    VIEWBOX et non du centre du dessin — l'aiguille décrirait alors une orbite
+    au lieu de tourner sur elle-même.
+  */
+  .boussole-aiguille {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
   /* ====================================================================== */
   /* TITRES FRAPPÉS                                                         */
   /* ====================================================================== */
