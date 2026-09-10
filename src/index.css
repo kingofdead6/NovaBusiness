@@ -364,10 +364,18 @@
     arbitraire fragile, et elle ne s'appliquait pas.
   */
   .engraving-marge {
-    top: 34%;
-    right: -14vw;
-    width: 46vw;
-    max-width: 44rem;
+    top: 30%;
+    right: -32vw;
+    width: 92vw;
+  }
+
+  @media (min-width: 1024px) {
+    .engraving-marge {
+      top: 34%;
+      right: -14vw;
+      width: 46vw;
+      max-width: 44rem;
+    }
   }
 
   /*
@@ -380,6 +388,31 @@
   */
   .navbar-pilule {
     background-color: color-mix(in oklab, transparent 62%, var(--ground-bg));
+  }
+
+  /*
+    MENU OUVERT : la pilule est posée SUR le rideau, dont le fond est
+    toujours le ciel. Elle prend donc l'encre du ciel, quel que soit le fond
+    de la page derrière — sinon elle restait claire avec un texte noir au
+    milieu de l'aubergine.
+  */
+  .navbar-corps[data-menu-open] {
+    background-color: color-mix(in oklab, transparent 88%, var(--contraste));
+    color: var(--contraste);
+  }
+
+  /* le logo, les barres du hamburger et son cercle suivent la même encre */
+  .navbar-corps[data-menu-open] .ink,
+  .navbar-corps[data-menu-open] a {
+    color: var(--contraste);
+  }
+
+  .navbar-corps[data-menu-open] [class*="bg-[var(--ground-ink)]"] {
+    background-color: var(--contraste);
+  }
+
+  .navbar-corps[data-menu-open] .rule-ink {
+    border-color: color-mix(in oklab, transparent 70%, var(--contraste));
   }
 
   .navbar-pilule--dense {
@@ -396,18 +429,38 @@
     Écrites ici et non en classes utilitaires : les marges négatives en `vw`
     demandent une syntaxe arbitraire fragile, qui ne s'appliquait pas.
   */
+  /*
+    SUR MOBILE les planches sont plus GRANDES en proportion et débordent
+    davantage : sur 390 px, une planche à 42vw devient un timbre-poste
+    illisible. Elles restent très pâles, donc elles habitent le fond sans
+    disputer la lecture.
+  */
   .hero-plate-gauche {
-    top: 12%;
-    left: -18vw;
-    width: 42vw;
-    max-width: 38rem;
+    top: 8%;
+    left: -34vw;
+    width: 86vw;
   }
 
   .hero-plate-droite {
-    top: 4%;
-    right: -14vw;
-    width: 36vw;
-    max-width: 34rem;
+    top: 2%;
+    right: -30vw;
+    width: 78vw;
+  }
+
+  @media (min-width: 1024px) {
+    .hero-plate-gauche {
+      top: 12%;
+      left: -18vw;
+      width: 42vw;
+      max-width: 38rem;
+    }
+
+    .hero-plate-droite {
+      top: 4%;
+      right: -14vw;
+      width: 36vw;
+      max-width: 34rem;
+    }
   }
 
   /*

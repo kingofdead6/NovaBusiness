@@ -100,24 +100,45 @@ export default function Takeover() {
       data-constellation-scope
       className="relative h-[300vh]"
     >
-      <div className="sticky top-0 flex h-stage items-center overflow-hidden">
+      {/*
+        Le panneau épinglé doit CONTENIR sa scène : sur mobile, texte et
+        constellation empilés dépassaient la hauteur d'écran et débordaient
+        sur la section suivante. On centre, on autorise le rétrécissement, et
+        on réserve la place de la barre flottante (`pt-24`).
+      */}
+      <div className="sticky top-0 flex h-stage overflow-hidden pb-6 pt-20 lg:items-center lg:py-0">
         {/*
           LE CIEL. Il n'est pas un décor posé derrière le texte : c'est le
           fond du récit lui-même (§03), et il n'existe que là où le site est
           dans le ciel. Voir `StarSky` pour l'exception du §09.
         */}
         <StarSky seed={11} className="text-contraste" />
-        <div className="edge grid w-full items-center gap-12 lg:grid-cols-[1fr_auto]">
+        {/*
+          SUR MOBILE : une colonne. Le texte garde sa taille naturelle en
+          haut, et la constellation occupe SIMPLEMENT CE QUI RESTE (`min-h-0`
+          + `flex-1`), au lieu d'imposer sa hauteur et de faire déborder le
+          panneau épinglé.
+
+          `min-h-0` est indispensable : sans lui, un enfant flex refuse de
+          se réduire sous sa taille de contenu, et tout le calcul échoue.
+        */}
+        <div className="edge flex h-full min-h-0 w-full flex-col justify-start gap-4 overflow-hidden lg:grid lg:h-auto lg:grid-cols-[1fr_auto] lg:items-center lg:gap-12">
           <div className="max-w-2xl">
-            <p className="ink-40 mb-8 font-mono text-[11px] uppercase tracking-[0.2em]">
+            <p className="ink-40 mb-4 font-mono text-[11px] uppercase tracking-[0.2em] lg:mb-8">
               Le récit
             </p>
 
-            <p className="text-d3 font-medium leading-[1.15]">
+            <p className="text-[26px] font-medium leading-[1.15] sm:text-d3">
               Une nova n'est pas une étoile nouvelle.
             </p>
 
-            <p className="ink-60 mt-6 max-w-lg text-[17px] leading-relaxed">
+            {/*
+              Le paragraphe explicatif est réservé aux grands écrans : sur un
+              téléphone, la scène épinglée ne tient pas en une hauteur d'écran
+              une fois la barre flottante dégagée, et c'est CE bloc qui est le
+              plus redondant — le titre et l'embrasement disent déjà le récit.
+            */}
+            <p className="ink-60 mt-4 hidden max-w-lg text-[15px] leading-relaxed sm:block lg:mt-6 lg:text-[17px]">
               C'est une étoile déjà présente, trop faible pour qu'on la
               remarque, qui multiplie soudain son éclat. Rien n'est né, le ciel
               n'a pas changé : elle vient de devenir visible.
@@ -130,7 +151,7 @@ export default function Takeover() {
             */}
             <p
               data-blaze
-              className="mt-12 font-display text-d2 font-black lowercase tracking-tight"
+              className="mt-5 font-display text-[34px] font-black lowercase leading-[0.95] tracking-tight sm:text-d2 lg:mt-12"
             >
               impossible à manquer.
             </p>
@@ -156,7 +177,12 @@ export default function Takeover() {
             monde, la constellation raconte. L'annexe A dit d'ailleurs que
             ces planches sont « des références de langage », pas le sujet.
           */}
-          <div className="relative hidden w-[34vw] max-w-lg lg:block">
+          {/*
+            SUR MOBILE la constellation n'est PAS masquée : c'est la pièce
+            centrale du site, et la cacher revenait à priver le téléphone du
+            récit. Elle passe simplement sous le texte, pleine largeur.
+          */}
+          <div className="relative mx-auto min-h-0 w-full max-w-sm flex-1 lg:mx-0 lg:w-[34vw] lg:max-w-lg lg:flex-none">
             <Engraving
               src={taureau}
               ratio="4/5"

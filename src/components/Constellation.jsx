@@ -236,7 +236,7 @@ export default function Constellation({ className = "" }) {
       viewBox="0 0 100 80"
       preserveAspectRatio="xMidYMid meet"
       aria-hidden="true"
-      className={`pointer-events-none ${className}`}
+      className={`pointer-events-none h-full w-full ${className}`}
     >
       {/* les traits, sous les points */}
       {SEGMENTS.map(([a, b], i) => (

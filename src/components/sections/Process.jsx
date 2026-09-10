@@ -124,7 +124,7 @@ export default function Process() {
         alt="Planche gravée — diagramme annoté, Cosmographia d'Apianus"
         data-reveal="plate"
         data-reveal-start="top 80%"
-        className="engraving-marge pointer-events-none absolute hidden opacity-[0.22] lg:block"
+        className="engraving-marge pointer-events-none absolute opacity-[0.10] lg:opacity-[0.22]"
       />
 
       <div className="edge relative">

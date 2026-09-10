@@ -59,7 +59,7 @@ export default function Values() {
         alt="Planche gravée — le Scorpion, Hevelius"
         data-reveal="plate"
         data-reveal-start="top 80%"
-        className="engraving-marge pointer-events-none absolute hidden opacity-[0.16] lg:block"
+        className="engraving-marge pointer-events-none absolute opacity-[0.10] lg:opacity-[0.16]"
       />
 
       <div className="edge relative">

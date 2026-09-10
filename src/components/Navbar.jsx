@@ -103,7 +103,8 @@ export default function Navbar() {
         className="fixed left-1/2 top-4 z-50 w-[calc(100%-6rem)] md:top-6 md:w-[calc(100%-2rem)]"
       >
         <div
-          className={`relative flex items-center justify-between rounded-full py-2 pl-4 pr-2 transition-all duration-500 ease-nova md:pl-6 ${
+          data-menu-open={open ? "true" : undefined}
+          className={`navbar-corps relative flex items-center justify-between rounded-full py-2 pl-4 pr-2 transition-all duration-500 ease-nova md:pl-6 ${
             solid
               ? "navbar-pilule navbar-pilule--dense rule-ink border backdrop-blur-md"
               : "navbar-pilule border border-transparent backdrop-blur-sm"
@@ -183,33 +184,83 @@ export default function Navbar() {
       <AnimatePresence>
         {open && (
           <>
-            {/* ---------------- MOBILE : carte compacte (inchangée) ---------------- */}
+            {/* ---------------- MOBILE : rideau plein écran ---------------- */}
+            {/*
+              Le panneau prend TOUT l'écran, comme sur ordinateur : une carte
+              compacte de 4 liens ne portait pas le même poids que le rideau,
+              et le téléphone se retrouvait avec une navigation au rabais.
+
+              Il porte aussi le CONTACT : le bouton « parlons-en » est masqué
+              sous 768 px pour que la pilule tienne, si bien qu'il n'existait
+              plus AUCUN chemin vers le contact depuis le téléphone.
+            */}
             <motion.div
               key="menu-mobile"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-              className="fixed inset-x-4 top-20 z-40 bg-ciel p-6 text-contraste md:hidden"
+              initial={{ clipPath: "inset(0 0 100% 0)" }}
+              animate={{ clipPath: "inset(0 0 0% 0)" }}
+              exit={{ clipPath: "inset(0 0 100% 0)" }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="fixed inset-0 z-40 flex flex-col bg-ciel text-contraste md:hidden"
             >
-              <ul className="flex flex-col gap-1">
-                {nav.map((item, i) => (
-                  <motion.li
-                    key={item.href}
-                    initial={{ opacity: 0, x: -12 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.06 * i + 0.1 }}
+              <div className="flex h-full flex-col justify-between px-5 pb-10 pt-28">
+                <nav aria-label="Sections du site">
+                  <ul className="flex flex-col">
+                    {nav.map((item, i) => (
+                      <motion.li
+                        key={item.href}
+                        initial={{ opacity: 0, y: 26 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 14, transition: { duration: 0.18 } }}
+                        transition={{
+                          duration: 0.6,
+                          delay: 0.12 + i * 0.07,
+                          ease: [0.16, 1, 0.3, 1],
+                        }}
+                        className="border-b border-contraste/10"
+                      >
+                        <a
+                          href={item.href}
+                          onClick={close}
+                          className="flex items-baseline gap-4 py-4"
+                        >
+                          <span className="font-mono text-[10px] tabular-nums text-contraste/35">
+                            0{i + 1}
+                          </span>
+                          <span className="font-display text-d3 font-black lowercase tracking-tight">
+                            {item.label}
+                          </span>
+                        </a>
+                      </motion.li>
+                    ))}
+                  </ul>
+                </nav>
+
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                  className="text-[13px] font-bold lowercase"
+                >
+                  <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.18em] text-contraste/45">
+                    Un projet
+                  </p>
+                  <a
+                    href={`mailto:${contact.email}`}
+                    onClick={close}
+                    className="link-underline block text-contraste"
                   >
-                    <a
-                      href={item.href}
-                      onClick={close}
-                      className="block border-b border-contraste/10 py-3 text-2xl font-semibold lowercase tracking-tight"
-                    >
-                      {item.label}
-                    </a>
-                  </motion.li>
-                ))}
-              </ul>
+                    {contact.email}
+                  </a>
+                  <a
+                    href={`tel:${contact.phone.replace(/\s/g, "")}`}
+                    onClick={close}
+                    className="link-underline mt-1 block text-contraste/70"
+                  >
+                    {contact.phone}
+                  </a>
+                </motion.div>
+              </div>
             </motion.div>
 
             {/* ---------------- ORDINATEUR : rideau plein écran ---------------- */}
