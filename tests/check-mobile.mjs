@@ -83,6 +83,22 @@ if (scope) {
   );
 }
 
+/* --- TOUTES les sections sont rendues --- */
+/*
+  Ce contrôle existe parce que `<Values />` a disparu de `App.jsx` lors d'une
+  édition : l'import restait, la section ne se montait plus, et RIEN ne
+  signalait la perte — ni le build, ni aucun test. Le récit du site avait
+  simplement un chapitre en moins.
+*/
+const attendues = ['top', 'studio', 'services', 'realisations', 'journal', 'contact'];
+// `<footer id="contact">` n'est pas une <section> : on interroge les deux
+const presentes = await p.evaluate(() =>
+  [...document.querySelectorAll('section[id], footer[id]')].map((s) => s.id)
+);
+const manquantes = attendues.filter((id) => !presentes.includes(id));
+check('toutes les sections sont rendues', manquantes.length === 0,
+  manquantes.length ? 'manquantes : ' + manquantes.join(', ') : `${presentes.length} sections`);
+
 /* --- au moins une planche gravée est rendue --- */
 const planches = await p.evaluate(
   () =>

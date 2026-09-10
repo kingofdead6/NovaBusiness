@@ -406,6 +406,25 @@
     variante. Elle était devenue entièrement transparente quand les anciens
     jetons ont été retirés.
   */
+  /*
+    LA PILULE NE FAIT PAS TRANSITER SA COULEUR.
+
+    Elle portait `transition-all`, qui animait `background-color` sur 500 ms.
+    Or l'encre, elle, bascule INSTANTANÉMENT avec `--ground` : pendant le
+    balayage la pilule gardait donc l'ancienne teinte une demi-seconde de plus
+    que son texte, et le logo se retrouvait en noir sur l'aubergine — un
+    contraste de 1.36, mesuré, le temps de quelques frames.
+
+    On ne fait donc transiter que ce qui ne dépend PAS du fond : la largeur et
+    le flou. La couleur suit le fond, sans délai.
+  */
+  .navbar-transition {
+    transition:
+      max-width 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+      backdrop-filter 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
   .navbar-pilule {
     background-color: color-mix(in oklab, transparent 62%, var(--ground-bg));
   }
@@ -554,6 +573,38 @@
       radial-gradient(58% 54% at 50% 50%, #000 0%, #00000059 40%, transparent 74%);
     mask-image: var(--plate),
       radial-gradient(58% 54% at 50% 50%, #000 0%, #00000059 40%, transparent 74%);
+  }
+
+  /*
+    L'AIGUILLE DE LA BOUSSOLE.
+
+    `transform-box: fill-box` + `transform-origin: center` : sans ces deux
+    lignes, un `rotate()` sur un groupe SVG pivote autour de l'ORIGINE DU
+    VIEWBOX et non du centre du dessin — l'aiguille décrirait alors une orbite
+    au lieu de tourner sur elle-même.
+  */
+  /*
+    L'HORIZON.
+
+    Les bords LATÉRAUX et le HAUT se fondent dans le ciel de la section : sans
+    cela l'image reste un rectangle collé au milieu de l'aubergine, alors
+    qu'elle doit en être la continuation.
+
+    Le BAS reste franc : c'est la carte, et c'est elle qui annonce le fond
+    clair qui suit. L'estomper effacerait précisément la charnière.
+  */
+  .horizon img {
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 100%),
+      linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 100%),
+      linear-gradient(to right, transparent 0%, #000 14%, #000 86%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+
+  .boussole-pivot {
+    transform-box: fill-box;
+    transform-origin: center;
   }
 
   /* ====================================================================== */

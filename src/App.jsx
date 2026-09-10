@@ -12,6 +12,7 @@ import SkyVeil from "./components/SkyVeil";
 import PlateDistortion from "./components/PlateDistortion";
 
 import Hero from "./components/sections/Hero";
+import Boussole from "./components/sections/Boussole";
 import Takeover from "./components/sections/Takeover";
 import Values from "./components/sections/Values";
 import Services from "./components/sections/Services";
@@ -70,8 +71,22 @@ export default function App() {
         */}
         <main>
           <Hero ready={ready} />
+          {/*
+            LE SEUIL. Dernier geste sur le fond clair : l'aiguille cherche,
+            puis se fixe — et c'est à cet instant que le ciel monte.
+            La section déclare `clair`, comme le hero : elle ne crée donc pas
+            de bascule, elle DÉPLACE la première à sa propre frontière avec
+            l'immersion.
+          */}
+          <Boussole />
           <Takeover />
           <Values />
+          {/*
+            LE RETOUR. Le ciel vient de se retirer : la boussole marque la
+            sortie comme elle avait marqué l'entrée, l'aiguille tournant
+            cette fois dans l'autre sens.
+          */}
+          <Boussole variante="retour" />
           <Services />
           <Work />
           <Process />
