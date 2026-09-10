@@ -1,28 +1,15 @@
-/*
-  LES ILLUSTRATIONS SONT DÉTOURÉES.
-
-  Les fichiers d'origine étaient des gravures peintes en BRONZE et OR — la
-  palette d'avant. Le §04 est catégorique : « le site n'a jamais plus de deux
-  couleurs à l'écran en même temps ».
-
-  On leur a donc appliqué le traitement des planches : la clarté de chaque
-  pixel est devenue son canal alpha, si bien qu'il ne reste qu'un TRAIT SUR
-  RIEN. Elles se peignent maintenant dans l'encre courante et suivent les deux
-  fonds, exactement comme les planches d'astronomie — ce que le §05 demande
-  (« une seule couleur de trait, deux états »).
-*/
-import service1 from "../assets/plates/oeuvres/service1-trait.png";
-import service2 from "../assets/plates/oeuvres/service2-trait.png";
-import service3 from "../assets/plates/oeuvres/service3-trait.png";
-import service4 from "../assets/plates/oeuvres/service4-trait.png";
-import bsustain from "../assets/plates/oeuvres/pic1-trait.png";
-import gimmi from "../assets/plates/oeuvres/pic2-trait.png";
-import invariant from "../assets/plates/oeuvres/pic3-trait.png";
-import marrakech from "../assets/plates/oeuvres/pic4-trait.png";
-import spotgov from "../assets/plates/oeuvres/pic5-trait.png";
-import lesson1 from "../assets/plates/oeuvres/lesson1-trait.png";
-import lesson2 from "../assets/plates/oeuvres/lesson2-trait.png";
-import lesson3 from "../assets/plates/oeuvres/lesson3-trait.png";
+import service1 from "../assets/Services/service1.jpg";
+import service2 from "../assets/Services/service2.jpg";
+import service3 from "../assets/Services/service3.jpg";
+import service4 from "../assets/Services/service4.jpg";
+import bsustain from "../assets/Works/pic1.png";
+import gimmi from "../assets/Works/pic2.png";
+import invariant from "../assets/Works/pic3.png";
+import marrakech from "../assets/Works/pic4.png";
+import spotgov from "../assets/Works/pic5.png";
+import lesson1 from "../assets/Lessons/lesson1.jpg";
+import lesson2 from "../assets/Lessons/lesson2.jpg";
+import lesson3 from "../assets/Lessons/lesson3.jpg";
 
 export const nav = [
   { label: "studio", href: "#studio" },

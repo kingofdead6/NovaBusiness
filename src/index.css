@@ -556,29 +556,6 @@
       radial-gradient(58% 54% at 50% 50%, #000 0%, #00000059 40%, transparent 74%);
   }
 
-  /*
-    LES ILLUSTRATIONS DÉTOURÉES.
-
-    Même principe que les planches : le fichier ne se voit pas lui-même, il
-    sert de MASQUE à un aplat de l'encre courante. L'illustration suit donc le
-    fond, et le site ne peint jamais plus de deux couleurs (§04).
-
-    `contain` et non `cover` : ces dessins ont une composition, les rogner
-    couperait le sujet.
-  */
-  .media-trait {
-    background-color: var(--ground-ink);
-    -webkit-mask-image: var(--plate);
-    mask-image: var(--plate);
-    -webkit-mask-size: contain;
-    mask-size: contain;
-    -webkit-mask-position: center;
-    mask-position: center;
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-    opacity: 0.78;
-  }
-
   /* ====================================================================== */
   /* TITRES FRAPPÉS                                                         */
   /* ====================================================================== */

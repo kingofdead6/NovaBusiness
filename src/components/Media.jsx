@@ -61,20 +61,20 @@ export default function Media({
       <div ref={inner} className="absolute inset-0 h-full w-full scale-[1.12]">
         {src ? (
           /*
-            L'illustration est DÉTOURÉE (trait sur fond transparent) : on la
-            peint donc dans l'encre courante en s'en servant de masque, comme
-            les planches gravées. Elle suit ainsi les deux fonds au lieu de
-            poser un rectangle d'une autre couleur (§04).
+            L'illustration est rendue TELLE QUELLE, avec ses couleurs.
 
-            `role="img"` + `aria-label` gardent l'accessibilité, puisque ce
-            n'est plus une balise <img>.
+            Une version précédente la peignait dans l'encre courante en s'en
+            servant de masque, comme les planches gravées : cela l'alignait
+            sur la palette, mais au prix de tout son coloris. Les
+            illustrations du client sont des pièces à part entière, pas des
+            éléments d'interface.
           */
-          <div
-            role={alt ? "img" : undefined}
-            aria-label={alt || undefined}
-            aria-hidden={alt ? undefined : "true"}
-            className={`media-trait h-full w-full ${imgClassName}`}
-            style={{ "--plate": `url(${src})` }}
+          <img
+            src={src}
+            alt={alt}
+            loading="lazy"
+            decoding="async"
+            className={`h-full w-full object-cover ${imgClassName}`}
           />
         ) : (
           <div
