@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import horizon from "../../assets/plates/horizon.jpg";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -8,41 +9,41 @@ gsap.registerPlugin(ScrollTrigger);
  * LA BOUSSOLE — LE SEUIL
  * ============================================================================
  *
- * Elle se tient entre le hero et l'immersion, sur le fond clair, JUSTE AVANT
- * que le ciel ne monte. C'est le dernier geste avant la plongée.
+ * Elle marque les deux frontières du ciel : juste AVANT que l'aubergine ne
+ * monte, et juste APRÈS qu'elle se soit retirée. Le même instrument aux deux
+ * bouts de la plongée, avec un geste inverse.
  *
- * POURQUOI UNE BOUSSOLE, ET POURQUOI ICI
- * --------------------------------------
+ * POURQUOI UNE BOUSSOLE
+ * ---------------------
  * L'annexe A range les instruments — astrolabe, sextant, rose des vents —
  * parmi les « objets fermés, symétriques, lisibles en petit », et les désigne
- * comme « candidats naturels pour un jeu d'icônes, des marqueurs de section ».
- * Une boussole est exactement cela : un marqueur de seuil.
+ * comme « candidats naturels pour des marqueurs de section ». Une boussole
+ * est un marqueur de seuil.
  *
- * Et elle dit ce que fait l'agence. Le §02 pose le récit — l'étoile est déjà
- * là, on la rend visible. La boussole est l'outil de ce récit : elle ne crée
- * pas le nord, elle le TROUVE. L'aiguille cherche, hésite, puis se fixe — et
- * le moment où elle se fixe est celui où le ciel monte.
+ * Et elle dit ce que fait l'agence : elle ne crée pas le nord, elle le TROUVE.
+ * C'est le §02 en un objet — l'aiguille cherche, hésite, dépasse, revient,
+ * puis se fixe sur ce qui était déjà là.
  *
- * LE GESTE, EN TROIS TEMPS
- * ------------------------
- *   0.00 → 0.45   LA ROSE SE DESSINE. Le cercle, les graduations et les
- *                 branches se tracent au trait (§05 : « tout se joue au
- *                 trait »). Rien n'apparaît en fondu.
+ * LE GESTE, EN CINQ COUCHES
+ * -------------------------
+ * Tout est piloté par UNE progression de défilement, et chaque couche en lit
+ * une tranche différente :
  *
- *   0.20 → 0.78   L'AIGUILLE CHERCHE. Elle balaie plusieurs tours en
- *                 ralentissant — une vraie aiguille qui se stabilise, pas une
- *                 rotation linéaire. Le mot « nord » gagne son contraste au
- *                 même rythme.
+ *   1. LA ROSE SE DESSINE     traits, graduations, branches — au trait (§05)
+ *   2. LES ANNEAUX TOURNENT   en sens INVERSE l'un de l'autre, l'extérieur
+ *                             plus lentement : la profondeur vient de l'écart
+ *   3. L'AIGUILLE CHERCHE     plusieurs tours, un DÉPASSEMENT amorti, puis
+ *                             l'arrêt — une aiguille aimantée, pas un moteur
+ *   4. LES REPÈRES RAYONNENT  quatre traits sortent des cardinaux au moment
+ *                             où l'aiguille se fixe
+ *   5. LE MOT ÉMERGE          il gagne son contraste, comme l'embrasement
  *
- *   0.78 → 1.00   ELLE SE FIXE. L'aiguille s'arrête au nord et n'en bouge
- *                 plus. C'est le seuil : la section suivante est le ciel.
- *
- * RIEN NE TOURNE TOUT SEUL (§09) : la rotation est une fonction de la
- * position de défilement. Immobile, l'aiguille est parfaitement figée, et
+ * RIEN NE TOURNE TOUT SEUL (§09) : chaque valeur est une fonction de la
+ * position de défilement. Immobile, l'instrument est parfaitement figé, et
  * remonter défait le geste exactement (§07).
  */
 
-/* Graduations de la rose : 32 traits, quatre longueurs selon l'importance. */
+/* Graduations de la rose : 32 traits, trois longueurs selon l'importance. */
 const GRADS = Array.from({ length: 32 }, (_, i) => {
   const angle = (i * 360) / 32;
   const cardinal = i % 8 === 0;
@@ -57,17 +58,29 @@ const GRADS = Array.from({ length: 32 }, (_, i) => {
 /*
   Les quatre branches de la rose, en losanges dessinés.
 
-  Elles occupent les DIAGONALES (45°, 135°…) et non les axes cardinaux : sur
-  ceux-ci l'aiguille les recouvrait presque exactement, et la rose ne se
-  lisait plus. Décalées, les deux dessins coexistent.
+  Elles occupent les DIAGONALES et non les axes cardinaux : sur ceux-ci
+  l'aiguille les recouvrait presque exactement, et la rose ne se lisait plus.
 */
 const BRANCHES = [45, 135, 225, 315];
 
-/* Nombre de tours que l'aiguille balaie avant de se fixer. */
+/* Les quatre repères qui rayonnent quand l'aiguille se fixe. */
+const REPERES = [0, 90, 180, 270];
+
+/* Nombre de tours balayés avant l'arrêt. */
 const TOURS = 3;
 
-export default function Boussole() {
+/** Ramène une progression globale sur un intervalle, bornée 0–1. */
+const phase = (p, a, b) => Math.max(0, Math.min(1, (p - a) / (b - a)));
+
+/**
+ * `variante` :
+ *   "seuil"  — sur le clair, avant la plongée. L'aiguille CHERCHE le nord.
+ *   "retour" — sur le clair, après la remontée. Elle le retrouve, et
+ *              l'illustration du client accompagne la sortie.
+ */
+export default function Boussole({ variante = "seuil" }) {
   const root = useRef(null);
+  const retour = variante === "retour";
 
   useEffect(() => {
     const el = root.current;
@@ -77,26 +90,31 @@ export default function Boussole() {
 
     const traces = el.querySelectorAll("[data-trace]");
     const aiguille = el.querySelector("[data-aiguille]");
+    const anneauInt = el.querySelector("[data-anneau-int]");
+    const anneauExt = el.querySelector("[data-anneau-ext]");
+    const reperes = el.querySelectorAll("[data-repere]");
     const mot = el.querySelector("[data-mot]");
+    const image = el.querySelector("[data-horizon]");
 
     /*
       Mouvement réduit : on pose l'état FINAL — rose tracée, aiguille au nord.
       Le seuil reste lisible, il ne se joue simplement pas.
     */
     if (reduced) {
-      traces.forEach((t) => {
+      [...traces, ...reperes].forEach((t) => {
         t.style.strokeDasharray = "none";
         t.style.strokeDashoffset = "0";
       });
       if (aiguille) aiguille.style.transform = "rotate(0deg)";
       if (mot) mot.style.opacity = "1";
+      if (image) image.style.opacity = "1";
       return undefined;
     }
 
     const ctx = gsap.context(() => {
       /* Chaque tracé connaît sa longueur : c'est elle qui le fait se dessiner. */
       const longueurs = new Map();
-      traces.forEach((node) => {
+      [...traces, ...reperes].forEach((node) => {
         const len = node.getTotalLength();
         longueurs.set(node, len);
         node.style.strokeDasharray = String(len);
@@ -110,60 +128,153 @@ export default function Boussole() {
         ease: "none",
         scrollTrigger: {
           /*
-            La fenêtre court jusqu'au BAS de la section : l'aiguille se fixe
-            donc à l'instant précis où la frontière avec l'immersion est
-            atteinte, et le ciel monte dans la foulée. Une fenêtre plus courte
-            laissait un défilement mort entre le geste et la bascule.
+            DEUX FENÊTRES, parce que les deux boussoles n'ont pas le même
+            rendez-vous avec la frontière.
+
+            AU SEUIL, le geste doit s'ACHEVER quand le ciel monte : la fenêtre
+            court donc jusqu'au bas de la section. Une fenêtre plus courte
+            laissait un défilement mort entre l'arrêt de l'aiguille et la
+            bascule.
+
+            AU RETOUR, c'est l'inverse : le geste doit être DÉJÀ EN COURS
+            pendant que le ciel se retire au-dessus. Il démarre donc dès que
+            la section entre par le bas et s'achève avant la fin, sinon la
+            boussole restait vide au moment précis du balayage.
           */
           trigger: el,
-          start: "top 85%",
-          end: "bottom bottom",
+          start: retour ? "top bottom" : "top 85%",
+          end: retour ? "bottom 60%" : "bottom bottom",
           scrub: 0.6,
         },
         onUpdate: () => {
           const p = state.p;
-          const clamp = (v) => Math.max(0, Math.min(1, v));
 
           /* 1 · LA ROSE SE DESSINE, trait par trait. */
-          const trace = clamp(p / 0.45);
+          const trace = phase(p, 0, 0.42);
           const part = 1 / traces.length;
           traces.forEach((t, i) => {
-            const local = clamp((trace - i * part * 0.65) / part);
+            const local = phase(trace, i * part * 0.65, i * part * 0.65 + part);
             const len = longueurs.get(t);
             t.style.strokeDashoffset = String(len * (1 - local));
           });
 
           /*
-            2 · L'AIGUILLE CHERCHE.
+            2 · LES ANNEAUX TOURNENT EN SENS INVERSE.
 
-            `1 - (1 - t)^3` : la rotation ralentit fortement en fin de course,
-            comme une aiguille aimantée qui se stabilise. Une progression
-            linéaire aurait l'air d'un moteur, pas d'un instrument.
+            L'extérieur va moins vite que l'intérieur : c'est cet ÉCART qui
+            fabrique la profondeur, pas une ombre. Les deux se calment en même
+            temps que l'aiguille.
           */
-          const cherche = clamp((p - 0.2) / 0.58);
-          const easing = 1 - Math.pow(1 - cherche, 3);
-          const tour = TOURS * 360 * (1 - easing);
-          if (aiguille) {
-            aiguille.style.transform = `rotate(${tour.toFixed(2)}deg)`;
+          const derive = 1 - phase(p, 0.15, 0.82);
+          if (anneauInt) {
+            anneauInt.style.transform = `rotate(${(derive * 84).toFixed(2)}deg)`;
+          }
+          if (anneauExt) {
+            anneauExt.style.transform = `rotate(${(derive * -52).toFixed(2)}deg)`;
           }
 
-          /* le mot gagne son contraste au même rythme que l'aiguille se fixe */
-          if (mot) mot.style.opacity = (easing * 0.55).toFixed(3);
+          /*
+            3 · L'AIGUILLE CHERCHE, DÉPASSE, PUIS SE FIXE.
+
+            Une aiguille aimantée ne s'arrête pas net : elle franchit le nord,
+            revient, oscille de moins en moins. On modélise donc une sinusoïde
+            AMORTIE plutôt qu'un simple ralentissement — le premier essai, en
+            `1-(1-t)³`, avait l'air d'un moteur qui freine.
+
+            `e^(-6t)` éteint l'oscillation ; à t = 1 elle est nulle et
+            l'aiguille est parfaitement immobile.
+          */
+          const cherche = phase(p, 0.18, 0.86);
+          const amorti = Math.exp(-6 * cherche);
+          const balayage = TOURS * 360 * (1 - cherche);
+          const oscillation = Math.sin(cherche * Math.PI * 5) * 26 * amorti;
+          const angle = (balayage + oscillation) * (retour ? -1 : 1);
+          if (aiguille) {
+            aiguille.style.transform = `rotate(${angle.toFixed(2)}deg)`;
+          }
+
+          /* 4 · LES REPÈRES RAYONNENT quand l'aiguille se pose. */
+          const pose = phase(p, 0.72, 0.96);
+          const partR = 1 / (reperes.length || 1);
+          reperes.forEach((r, i) => {
+            const local = phase(pose, i * partR * 0.5, i * partR * 0.5 + partR);
+            const len = longueurs.get(r);
+            r.style.strokeDashoffset = String(len * (1 - local));
+          });
+
+          /* 5 · LE MOT ÉMERGE, comme l'embrasement en tout petit. */
+          const emerge = phase(p, 0.5, 0.9);
+          if (mot) mot.style.opacity = (emerge * 0.6).toFixed(3);
+
         },
       });
+
+      /*
+        L'ILLUSTRATION A SON PROPRE DÉCLENCHEUR.
+
+        Elle était pilotée par la progression de la section, laquelle démarre
+        bien après que le ciel a commencé à se retirer : l'image restait donc
+        quasi transparente au moment précis du balayage, et la bande claire
+        paraissait vide.
+
+        Un déclencheur distinct, calé sur sa PROPRE entrée dans la fenêtre, la
+        rend présente dès qu'elle est visible — les deux gestes ne se disputent
+        plus un même calendrier.
+      */
+      if (image) {
+        gsap.fromTo(
+          image,
+          { opacity: 0 },
+          {
+            opacity: 0.92,
+            ease: "none",
+            scrollTrigger: {
+              trigger: image,
+              start: "top bottom",
+              end: "top 55%",
+              scrub: 0.5,
+            },
+          }
+        );
+      }
     }, el);
 
     return () => ctx.revert();
-  }, []);
+  }, [retour]);
 
   return (
     <section
       ref={root}
       data-ground="clair"
-      aria-label="Trouver le nord"
-      className="relative flex items-center justify-center overflow-hidden py-24 md:py-32"
+      aria-label={retour ? "Le nord retrouvé" : "Trouver le nord"}
+      className={`relative flex items-center justify-center overflow-hidden ${
+        retour ? "pb-24 pt-6 md:pb-32 md:pt-10" : "py-24 md:py-32"
+      }`}
     >
       <div className="edge flex flex-col items-center gap-8">
+        {/*
+          L'ILLUSTRATION DU CLIENT — « les deux fonds au repos, l'horizon comme
+          charnière ». Elle n'apparaît qu'à la SORTIE du ciel, là où le site
+          vient précisément de faire ce qu'elle représente : traverser
+          l'horizon entre les deux fonds.
+
+          NOTE DE CONFORMITÉ : elle porte des figures humaines contemporaines,
+          que le §09 interdit — l'exception ne couvrant que les figures gravées
+          de constellation. Elle est utilisée sur demande explicite du client,
+          qui tranche donc ce point.
+        */}
+        {retour ? (
+          <figure data-horizon className="w-full max-w-3xl opacity-0">
+            <img
+              src={horizon}
+              alt="L'horizon comme charnière : le ciel étoilé au-dessus, la carte au-dessous"
+              loading="lazy"
+              decoding="async"
+              className="w-full"
+            />
+          </figure>
+        ) : null}
+
         <svg
           viewBox="-60 -60 120 120"
           className="w-[62vw] max-w-[19rem] sm:max-w-[22rem]"
@@ -173,63 +284,76 @@ export default function Boussole() {
           strokeLinejoin="round"
           aria-hidden="true"
         >
-          {/* le cercle extérieur */}
-          <circle data-trace cx="0" cy="0" r="46" strokeWidth="0.7" opacity="0.55" />
-          <circle data-trace cx="0" cy="0" r="38" strokeWidth="0.4" opacity="0.35" />
+          {/* l'anneau extérieur : cercle + graduations, tourne à contresens */}
+          <g data-anneau-ext className="boussole-pivot">
+            <circle data-trace cx="0" cy="0" r="46" strokeWidth="0.7" opacity="0.55" />
+            {GRADS.map((g, i) => {
+              const rad = (g.angle * Math.PI) / 180;
+              const r1 = 46 - g.len;
+              return (
+                <line
+                  key={i}
+                  data-trace
+                  x1={Math.cos(rad) * r1}
+                  y1={Math.sin(rad) * r1}
+                  x2={Math.cos(rad) * 46}
+                  y2={Math.sin(rad) * 46}
+                  strokeWidth={g.w}
+                  opacity="0.5"
+                />
+              );
+            })}
+          </g>
 
-          {/* les graduations */}
-          {GRADS.map((g, i) => {
-            const rad = (g.angle * Math.PI) / 180;
-            const r1 = 46 - g.len;
+          {/* l'anneau intérieur : le cercle et les branches de la rose */}
+          <g data-anneau-int className="boussole-pivot">
+            <circle data-trace cx="0" cy="0" r="38" strokeWidth="0.4" opacity="0.35" />
+            {BRANCHES.map((a, i) => {
+              const rad = (a * Math.PI) / 180;
+              const perp = rad + Math.PI / 2;
+              const pointe = 32;
+              const large = 7;
+              return (
+                <path
+                  key={`b${i}`}
+                  data-trace
+                  d={`M 0 0
+                      L ${(Math.cos(perp) * large).toFixed(2)} ${(Math.sin(perp) * large).toFixed(2)}
+                      L ${(Math.cos(rad) * pointe).toFixed(2)} ${(Math.sin(rad) * pointe).toFixed(2)}
+                      L ${(-Math.cos(perp) * large).toFixed(2)} ${(-Math.sin(perp) * large).toFixed(2)}
+                      Z`}
+                  strokeWidth="0.5"
+                  opacity="0.45"
+                />
+              );
+            })}
+          </g>
+
+          {/* les repères qui rayonnent une fois l'aiguille posée */}
+          {REPERES.map((a, i) => {
+            const rad = (a * Math.PI) / 180;
             return (
               <line
-                key={i}
-                data-trace
-                x1={Math.cos(rad) * r1}
-                y1={Math.sin(rad) * r1}
-                x2={Math.cos(rad) * 46}
-                y2={Math.sin(rad) * 46}
-                strokeWidth={g.w}
-                opacity="0.5"
-              />
-            );
-          })}
-
-          {/*
-            LES QUATRE BRANCHES, en losanges dessinés au trait — jamais
-            remplies : le §05 veut que la structure fasse l'image.
-          */}
-          {BRANCHES.map((a, i) => {
-            const rad = (a * Math.PI) / 180;
-            const perp = rad + Math.PI / 2;
-            const pointe = 32;
-            const large = 7;
-            return (
-              <path
-                key={`b${i}`}
-                data-trace
-                d={`M 0 0
-                    L ${(Math.cos(perp) * large).toFixed(2)} ${(Math.sin(perp) * large).toFixed(2)}
-                    L ${(Math.cos(rad) * pointe).toFixed(2)} ${(Math.sin(rad) * pointe).toFixed(2)}
-                    L ${(-Math.cos(perp) * large).toFixed(2)} ${(-Math.sin(perp) * large).toFixed(2)}
-                    Z`}
-                strokeWidth="0.5"
-                opacity="0.45"
+                key={`r${i}`}
+                data-repere
+                x1={Math.cos(rad) * 48}
+                y1={Math.sin(rad) * 48}
+                x2={Math.cos(rad) * 56}
+                y2={Math.sin(rad) * 56}
+                strokeWidth="0.8"
+                opacity="0.7"
               />
             );
           })}
 
           {/*
             L'AIGUILLE. Elle pivote autour du centre — d'où
-            `transform-box: fill-box` et `transform-origin: center` en CSS,
-            sans quoi elle tournerait autour du coin du viewBox.
+            `transform-box: fill-box` en CSS, sans quoi un `rotate()` sur un
+            groupe SVG tourne autour de l'ORIGINE DU VIEWBOX et l'aiguille
+            décrirait une orbite au lieu de tourner sur elle-même.
           */}
-          <g data-aiguille className="boussole-aiguille">
-            <path
-              d="M 0 -40 L 5 0 L 0 40 L -5 0 Z"
-              strokeWidth="0.8"
-              opacity="0.9"
-            />
+          <g data-aiguille className="boussole-pivot">
+            <path d="M 0 -40 L 5 0 L 0 40 L -5 0 Z" strokeWidth="0.8" opacity="0.9" />
             <line x1="0" y1="-40" x2="0" y2="40" strokeWidth="0.4" opacity="0.5" />
           </g>
 
@@ -237,16 +361,11 @@ export default function Boussole() {
           <circle cx="0" cy="0" r="2.2" strokeWidth="0.7" opacity="0.8" />
         </svg>
 
-        {/*
-          Le mot gagne son contraste quand l'aiguille se fixe. C'est le même
-          geste que l'embrasement, en tout petit : rien n'apparaît, quelque
-          chose devient lisible.
-        */}
         <p
           data-mot
           className="ink font-mono text-[11px] uppercase tracking-[0.3em] opacity-0"
         >
-          trouver le nord
+          {retour ? "le nord, retrouvé" : "trouver le nord"}
         </p>
       </div>
     </section>

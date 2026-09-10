@@ -564,7 +564,7 @@
     VIEWBOX et non du centre du dessin — l'aiguille décrirait alors une orbite
     au lieu de tourner sur elle-même.
   */
-  .boussole-aiguille {
+  .boussole-pivot {
     transform-box: fill-box;
     transform-origin: center;
   }
