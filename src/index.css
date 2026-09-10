@@ -462,6 +462,71 @@
   }
 
   /* ====================================================================== */
+  /* TITRES FRAPPÉS                                                         */
+  /* ====================================================================== */
+
+  /*
+    LE FANTÔME NE DOIT JAMAIS SE VOIR.
+
+    `TypedHeading` rend DEUX exemplaires du titre : un « fantôme » qui réserve
+    la place du texte complet — sans quoi la page saute à chaque caractère
+    frappé — et l'exemplaire vivant dans lequel typed.js écrit.
+
+    Ces règles avaient disparu lors de la réécriture de la feuille de styles :
+    le fantôme se retrouvait donc rendu normalement, et TOUS les titres frappés
+    s'affichaient EN DOUBLE. Sans CSS, un composant qui superpose deux calques
+    n'a plus aucun moyen d'en cacher un.
+
+    `height: 0` + `visibility: hidden` plutôt que `display: none` : il faut que
+    le fantôme occupe encore sa LARGEUR pour que la réservation fonctionne.
+  */
+  .typed-slot {
+    position: relative;
+    display: block;
+  }
+
+  /*
+    LE FANTÔME DONNE SA HAUTEUR AU BLOC, le texte vivant est superposé.
+
+    C'est l'inverse de la version d'origine, et c'est bien plus robuste : le
+    fantôme reste DANS LE FLUX (donc il réserve exactement la place du titre
+    complet, à la police réelle et à la largeur réelle), tandis que le texte
+    frappé est posé par-dessus en `absolute`.
+
+    Aucune mesure JavaScript n'est nécessaire, donc plus rien à resynchroniser
+    au chargement des polices ni au redimensionnement. Les deux versions
+    précédentes calculaient une réserve qui valait une ligne de trop ou de
+    moins, et le titre se retrouvait tronqué.
+
+    `visibility: hidden` et non `opacity: 0` : le fantôme ne doit pas être
+    lisible, mais il doit continuer à occuper sa place.
+  */
+  .typed-ghost {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .typed-live {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* frappe terminée : le curseur clignotant disparaît */
+  .typed-slot[data-typed-state="done"] .typed-cursor {
+    display: none;
+  }
+
+  /*
+    Le curseur de frappe ne clignote PAS en boucle : le §09 interdit « les
+    animations en boucle et les éléments qui pulsent ». Il reste donc posé,
+    puis disparaît à la fin de la frappe.
+  */
+  .typed-cursor {
+    font-weight: 300;
+    opacity: 0.5;
+  }
+
+  /* ====================================================================== */
   /* MENU PLEIN ÉCRAN                                                       */
   /* ====================================================================== */
 

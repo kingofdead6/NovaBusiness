@@ -11,9 +11,10 @@
     "verify:bans": "node tests/check-bans.mjs",
     "verify:contrast": "node tests/check-contrast.mjs",
     "verify:ground": "node tests/check-ground.mjs",
-    "verify": "npm run verify:palette && npm run verify:bans && npm run verify:contrast && npm run verify:ground && npm run verify:cursor && npm run verify:recit",
+    "verify": "npm run verify:palette && npm run verify:bans && npm run verify:contrast && npm run verify:ground && npm run verify:cursor && npm run verify:recit && npm run verify:typed",
     "verify:cursor": "node tests/check-cursor.mjs",
-    "verify:recit": "node tests/check-constellation.mjs"
+    "verify:recit": "node tests/check-constellation.mjs",
+    "verify:typed": "node tests/check-typed.mjs"
   },
   "dependencies": {
     "framer-motion": "^11.3.0",
