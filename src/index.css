@@ -445,6 +445,22 @@
     );
   }
 
+  /*
+    La planche derrière la constellation déborde largement de son cadre et
+    se dissout très tôt : elle SITUE le monde, elle ne le dessine pas. Le
+    sujet est la constellation.
+  */
+  .constellation-fond {
+    inset: -22% -18%;
+  }
+
+  .constellation-fond .engraving-img {
+    -webkit-mask-image: var(--plate),
+      radial-gradient(58% 54% at 50% 50%, #000 0%, #00000059 40%, transparent 74%);
+    mask-image: var(--plate),
+      radial-gradient(58% 54% at 50% 50%, #000 0%, #00000059 40%, transparent 74%);
+  }
+
   /* ====================================================================== */
   /* MENU PLEIN ÉCRAN                                                       */
   /* ====================================================================== */

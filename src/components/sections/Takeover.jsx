@@ -1,10 +1,11 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Star } from "../Plate";
+
 import Engraving from "../Engraving";
 import taureau from "../../assets/plates/taureau-trait.png";
 import StarSky from "../StarSky";
+import Constellation from "../Constellation";
 import { splitCharsRich } from "../../lib/text";
 import { palette } from "../../lib/tokens";
 
@@ -96,6 +97,7 @@ export default function Takeover() {
       id="studio"
       ref={root}
       data-ground="ciel"
+      data-constellation-scope
       className="relative h-[300vh]"
     >
       <div className="sticky top-0 flex h-stage items-center overflow-hidden">
@@ -145,18 +147,25 @@ export default function Takeover() {
             Elle est traitée par `Engraving` : le papier crème disparaît et
             seul le trait reste, en parchemin sur l'aubergine.
           */}
-          <div className="relative hidden w-[26vw] max-w-sm lg:block">
+          {/*
+            LA CONSTELLATION prend la place principale : c'est le §02 joué
+            par le défilement, et le §11 demande que « personne d'autre que
+            NOVA ne pourrait produire ce récit ».
+
+            La planche de Bayer passe DERRIÈRE, très pâle : elle situe le
+            monde, la constellation raconte. L'annexe A dit d'ailleurs que
+            ces planches sont « des références de langage », pas le sujet.
+          */}
+          <div className="relative hidden w-[34vw] max-w-lg lg:block">
             <Engraving
               src={taureau}
               ratio="4/5"
               parallax={5}
               warp="scroll"
-              className="relative"
-              alt="Planche gravée — le Taureau, Uranometria de Bayer, 1603"
-              label="Bayer · Uranometria · 1603"
+              alt=""
+              className="constellation-fond pointer-events-none absolute opacity-[0.09]"
             />
-            <Star rays={5} className="absolute -left-6 top-8 h-6 w-6" />
-            <Star rays={4} className="absolute -right-2 bottom-16 h-4 w-4" />
+            <Constellation className="relative w-full text-contraste" />
           </div>
         </div>
       </div>
