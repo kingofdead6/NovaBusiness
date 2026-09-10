@@ -1,22 +1,58 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import anime from "animejs/lib/anime.es.js";
 import { initReveals } from "../../lib/reveal";
-import TypedHeading from "../TypedHeading";
-import Media from "../Media";
-import ShardedMedia from "../SharedMedia";
-import people from "../../assets/People/people.jpg"
+import Engraving from "../Engraving";
+import cosmographia from "../../assets/plates/cosmographia-trait.png";
+
+gsap.registerPlugin(ScrollTrigger);
+
 /**
- * SECTION 08 — MÉTHODE + CHIFFRES
- * Un vrai déroulé chronologique (donc les numéros ont un sens), avec une barre
- * de progression qui se remplit au scroll et des compteurs anime.js.
+ * MÉTHODE + CHIFFRES
+ * ============================================================================
+ *
+ * POURQUOI LE RAIL A DISPARU
+ * --------------------------
+ * La version précédente dessinait une colonne verticale avec une barre de
+ * progression qui se remplissait au défilement et des pastilles à chaque
+ * étape. C'est mot pour mot l'interdit du §09 : « marqueur qui suit le
+ * défilement le long d'une colonne ».
+ *
+ * Le déroulé reste chronologique — les numéros ont donc un sens — mais c'est
+ * LE CHIFFRE qui fait la structure. Aucun connecteur, aucune pastille, aucun
+ * filet entre les blocs.
+ *
+ * LES COMPTEURS RESTENT
+ * ---------------------
+ * Ils ne bouclent pas et ne pulsent pas : ils comptent une fois, à l'entrée
+ * dans l'écran. Ce sont des preuves chiffrées, ce que le §01 réclame
+ * explicitement (« des chiffres vérifiables, jamais d'approximation
+ * flatteuse »), pas une animation d'ambiance.
+ *
+ * anime.js n'est plus nécessaire : GSAP compte aussi bien, et cela retire une
+ * dépendance d'animation au projet.
  */
 const steps = [
-  { week: "Semaine 1", title: "Cadrage", body: "Un atelier de 2 h, un document d'une page. On valide le périmètre, le budget et la date de livraison." },
-  { week: "Semaines 2–3", title: "Direction artistique", body: "Deux pistes visuelles complètes. Vous en choisissez une, on l'affine ensemble." },
-  { week: "Semaines 4–7", title: "Production", body: "Design puis développement, avec une préversion en ligne mise à jour chaque semaine." },
-  { week: "Semaine 8", title: "Mise en ligne", body: "Recette, formation de vos équipes, transfert des accès. Le site vous appartient." },
+  {
+    week: "Semaine 1",
+    title: "Cadrage",
+    body: "Un atelier de 2 h, un document d'une page. On valide le périmètre, le budget et la date de livraison.",
+  },
+  {
+    week: "Semaines 2–3",
+    title: "Direction artistique",
+    body: "Deux pistes visuelles complètes. Vous en choisissez une, on l'affine ensemble.",
+  },
+  {
+    week: "Semaines 4–7",
+    title: "Production",
+    body: "Design puis développement, avec une préversion en ligne mise à jour chaque semaine.",
+  },
+  {
+    week: "Semaine 8",
+    title: "Mise en ligne",
+    body: "Recette, formation de vos équipes, transfert des accès. Le site vous appartient.",
+  },
 ];
 
 const stats = [
@@ -30,141 +66,118 @@ export default function Process() {
 
   useEffect(() => {
     const el = root.current;
-    if (!el) return;
+    if (!el) return undefined;
 
     const ctx = gsap.context(() => {
       initReveals(el);
 
-      // barre de progression du déroulé
-      gsap.fromTo(
-        el.querySelector("[data-progress]"),
-        { scaleY: 0 },
-        {
-          scaleY: 1,
-          ease: "none",
-          transformOrigin: "top",
-          scrollTrigger: {
-            trigger: el.querySelector("[data-steps]"),
-            start: "top 70%",
-            end: "bottom 75%",
-            scrub: true,
-          },
-        }
-      );
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const counters = el.querySelectorAll("[data-count]");
 
-      // compteurs — déclenchés une seule fois
-      ScrollTrigger.create({
-        trigger: el.querySelector("[data-stats]"),
-        start: "top 82%",
-        once: true,
-        onEnter: () => {
-          el.querySelectorAll("[data-count]").forEach((node) => {
-            const target = { v: 0 };
-            const end = Number(node.dataset.count);
-            anime({
-              targets: target,
-              v: end,
-              round: 1,
-              duration: 1600,
-              easing: "easeOutExpo",
-              update: () => {
-                node.textContent = target.v;
-              },
-            });
-          });
-        },
+      counters.forEach((node) => {
+        const target = Number(node.dataset.count);
+
+        if (reduced) {
+          node.textContent = String(target);
+          return;
+        }
+
+        const state = { value: 0 };
+
+        gsap.to(state, {
+          value: target,
+          duration: 1.4,
+          ease: "power2.out",
+          /*
+            `once: true` : un compteur qui se relance à chaque passage
+            deviendrait une animation en boucle, ce que le §09 interdit.
+          */
+          scrollTrigger: { trigger: node, start: "top 85%", once: true },
+          onUpdate: () => {
+            node.textContent = String(Math.round(state.value));
+          },
+        });
       });
     }, el);
 
     return () => ctx.revert();
   }, []);
 
-  /*
-   * `overflow-hidden` sur la section : les éclats de <ShardedMedia> se
-   * déplacent hors de leur cadre, et la section les laissait élargir la mise
-   * en page sur mobile.
-   */
   return (
-    <section ref={root} className="relative overflow-hidden bg-ivoire py-24 md:py-32">
-      <div className="edge">
-        <div className="grid gap-14 lg:grid-cols-[1fr_0.85fr] lg:gap-20">
-          <div>
-            <span data-reveal="fade" className="eyebrow mb-6 block">
-              Méthode
-            </span>
-            <TypedHeading
-              as="h2"
-              className="text-d2 font-medium"
-              text="Huit semaines, sans surprise"
-              html={'Huit semaines, <span class="font-display italic text-bronze">sans surprise</span>'}
-            />
+    <section
+      ref={root}
+      data-ground="clair"
+      className="offscreen-idle relative overflow-hidden py-28 md:py-36"
+    >
+      {/*
+        APIANUS, COSMOGRAPHIA.
 
-            <div data-steps className="relative mt-14 pl-8">
-              {/* rail + progression */}
-              <span className="absolute left-0 top-1 h-full w-px bg-charbon/10" aria-hidden="true" />
-              <span
-                data-progress
-                className="absolute left-0 top-1 h-full w-px bg-bronze"
-                aria-hidden="true"
-              />
+        L'annexe A en retient « la mise en page : grand cercle, cadre,
+        cartouches d'angle, diagrammes annotés » — c'est le langage d'une
+        MÉTHODE, donc sa place est ici, en regard du déroulé en huit semaines.
+        Sur le fond clair, le trait se peint en noir de lui-même.
+      */}
+      <Engraving
+        src={cosmographia}
+        ratio="1/1"
+        parallax={6}
+        alt="Planche gravée — diagramme annoté, Cosmographia d'Apianus"
+        data-reveal="plate"
+        data-reveal-start="top 80%"
+        className="engraving-marge pointer-events-none absolute opacity-[0.10] lg:opacity-[0.22]"
+      />
 
-              <ol className="flex flex-col gap-11">
-                {steps.map((s) => (
-                  <li key={s.title} data-step className="relative">
-                    <span
-                      className="absolute -left-8 top-2 h-2 w-2 -translate-x-1/2 rounded-full bg-bronze"
-                      aria-hidden="true"
-                    />
-                    <span
-                      data-reveal="fade"
-                      className="block font-mono text-[11px] uppercase tracking-[0.18em] text-pierre"
-                    >
-                      {s.week}
-                    </span>
-                    <TypedHeading
-                      as="h3"
-                      className="mt-2 text-2xl font-bold tracking-tight"
-                      text={s.title}
-                      speed={34}
-                    />
-                    <p
-                      data-reveal="fade"
-                      data-reveal-delay="0.1"
-                      className="mt-2 max-w-md text-[15px] leading-relaxed text-pierre"
-                    >
-                      {s.body}
-                    </p>
-                  </li>
-                ))}
-              </ol>
+      <div className="edge relative">
+        <h2
+          data-reveal="text"
+          className="max-w-3xl font-display text-d2 font-black lowercase tracking-tight"
+        >
+          huit semaines, de bout en bout.
+        </h2>
+
+        <span
+          data-reveal="rule"
+          data-reveal-delay="0.25"
+          aria-hidden="true"
+          className="rule-ink mt-8 block h-px w-full border-t"
+        />
+
+        <ol className="mt-24 space-y-16 md:space-y-20">
+          {steps.map((step, i) => (
+            <li
+              key={step.title}
+              data-reveal="fade"
+              className="grid gap-4 md:grid-cols-[6rem_1fr]"
+            >
+              <span className="ink-40 font-mono text-[11px] tabular-nums tracking-[0.18em]">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <div className="max-w-2xl">
+                <p className="ink-40 font-mono text-[11px] uppercase tracking-[0.18em]">
+                  {step.week}
+                </p>
+                <h3 className="mt-3 text-d3 font-medium lowercase">{step.title}</h3>
+                <p className="ink-60 mt-4 text-[17px] leading-relaxed">{step.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        <div
+          data-reveal="lines"
+          className="rule-ink mt-28 grid gap-12 border-t pt-12 sm:grid-cols-3"
+        >
+          {stats.map((stat) => (
+            <div key={stat.label}>
+              <p className="font-display text-d3 font-black tabular-nums">
+                <span data-count={stat.value}>0</span>
+                {stat.suffix}
+              </p>
+              <p className="ink-40 mt-2 font-mono text-[11px] uppercase tracking-[0.18em]">
+                {stat.label}
+              </p>
             </div>
-          </div>
-
-          <div className="flex flex-col gap-8">
-            <ShardedMedia
-              src={people}
-              ratio="4/5"
-              parallax={10}
-              label="Photo d'équipe ou de l'atelier — portrait 4/5"
-            />
-
-            <div data-stats className="grid grid-cols-3 gap-4 border-t border-charbon/10 pt-8">
-              {stats.map((s) => (
-                <div key={s.label}>
-                  <p className="text-3xl font-black tracking-tight md:text-4xl">
-                    <span data-count={s.value}>0</span>
-                    {s.suffix}
-                  </p>
-                  <p
-                    data-reveal="fade"
-                    className="mt-2 text-[12px] leading-snug text-pierre"
-                  >
-                    {s.label}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     </section>

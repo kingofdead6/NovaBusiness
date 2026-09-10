@@ -1,23 +1,47 @@
 <!doctype html>
-<html lang="fr">
+<html lang="fr" style="background-color: #2e1a47">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Nova Business — Studio digital, Paris</title>
+    <!--
+      §01 : « NOVA Business » est CONSERVÉ ici volontairement. Le nom ne
+      subsiste hors du champ visible que dans le logo, la raison sociale, les
+      mentions légales et LES BALISES DE TITRE — précisément « pour ne pas
+      perdre la requête de marque déjà acquise ». À l'écran, c'est NOVA seul.
+    -->
+    <title>NOVA Business — Agence digitale, Paris</title>
     <meta
       name="description"
-      content="Nova Business conçoit sites, identités et campagnes pour les marques qui veulent se remarquer."
+      content="NOVA prend une marque de bout en bout : image de marque, site, application, référencement, contenu. Tout ou rien."
     />
-    <!-- REMPLACER : favicon -->
-    <link rel="icon" type="image/png" href="./src/assets/Logo.jpg" />
+    <meta name="theme-color" content="#2E1A47" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!--
+      ÉCART ASSUMÉ AU §06 : le brief exige des polices auto-hébergées, sans
+      service tiers. On reste sur le CDN pour l'instant, sur décision client.
+      À reprendre avant la recette : c'est une connexion tierce sur le chemin
+      du LCP, la métrique même que le §07 nomme comme limite dure.
+
+      Trois voix (§06) : Fraunces pour le titrage, Inter pour le texte
+      courant, IBM Plex Mono pour les libellés et compteurs.
+    -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Bodoni+Moda:ital,opsz,wght@1,6..96,400;1,6..96,500;0,6..96,400;0,6..96,600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,400&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
   </head>
+  <!--
+    La couleur de marque est posée sur <html> (voir l'attribut plus haut) et
+    NON sur <body> : un style inline sur <body> l'emporterait définitivement
+    sur la règle de la feuille de styles, et le fond resterait aubergine pour
+    toujours — le moteur des deux fonds n'aurait plus aucun effet visible.
+
+    Sur <html>, la couleur ne sert qu'à couvrir la première peinture, avant
+    que React ne monte : le §07 veut « la couleur de marque avant tout le
+    reste ». <body> reprend ensuite la main via `--ground-bg`.
+  -->
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>

@@ -1,46 +1,85 @@
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
+import { palette } from "../lib/tokens";
 
 /**
  * Curseur maison : un petit disque qui grossit sur les éléments marqués
  * `data-cursor="hover"` et affiche un libellé sur `data-cursor-text`.
  * Désactivé au toucher et si l'utilisateur a réduit les animations.
  *
- * Le disque s'INVERSE selon le fond qu'il survole : bronze sur les surfaces
- * claires, ivoire sur les surfaces sombres. La teinte est déduite du fond
- * réellement peint sous le curseur (voir `readBackdrop`), et non d'une liste
- * de sections codée en dur — les blocs sombres vivent à des profondeurs très
- * variables (section entière pour Values, simple carte pour SplitCta), et
- * une liste de sélecteurs se désynchroniserait à la première refonte.
+ * Le disque SUIT LE FOND qu'il survole : il se peint en ciel sur le clair, en
+ * contraste sur le ciel. La teinte est déduite du fond RÉELLEMENT PEINT sous
+ * le curseur, et non d'une liste de sections codée en dur — les surfaces
+ * sombres vivent à des profondeurs très variables (une section entière, une
+ * simple carte), et une liste de sélecteurs se désynchroniserait à la
+ * première refonte.
+ *
+ * Cela couvre donc aussi bien les trois bascules de fond de la page que les
+ * blocs qui portent leur propre couleur.
  */
 
-/* Couleurs du disque selon le fond. */
-const INK_ON_LIGHT = "#8A6045"; // bronze
-const INK_ON_DARK = "#F5F0E8"; // ivoire
+/*
+  Les couleurs viennent de la source unique (`src/lib/tokens.js`) : ce
+  composant compare des LUMINANCES, il lui faut donc de vraies valeurs et
+  non des variables CSS. C'est le seul consommateur de ce genre.
 
-/* Variantes au survol d'une cible `data-cursor`. */
-const ACCENT_ON_LIGHT = "#C9A86A"; // doré
-const ACCENT_ON_DARK = "#FFFFFF";
+  Sur le clair on dessine avec le ciel, sur le ciel avec le contraste : la
+  règle du §04 appliquée au curseur lui-même.
+*/
+const INK_ON_LIGHT = palette.ciel;
+const INK_ON_DARK = palette.contraste;
+
+/* Au survol d'une cible, le disque passe dans l'autre sens : négatif local. */
+const ACCENT_ON_LIGHT = palette.noir;
+const ACCENT_ON_DARK = palette.clair;
 
 /**
- * Luminance perçue d'une couleur CSS `rgb()` / `rgba()`.
- * Renvoie `null` si la couleur est absente ou totalement transparente.
+ * RÉSOLUTION DES COULEURS
+ * ============================================================================
+ *
+ * On laisse le NAVIGATEUR convertir, via un canvas de 1×1 pixel, au lieu de
+ * parser la chaîne CSS à la main.
+ *
+ * C'est indispensable depuis que le fond est calculé par `color-mix(in oklab,
+ * …)` : les couleurs arrivent alors en `oklab(0.94 0.0006 0.017)`, dont les
+ * composantes vont de 0 à 1 et non de 0 à 255. L'ancien parseur les divisait
+ * par 255 et trouvait une luminance quasi nulle — le curseur se croyait donc
+ * en PERMANENCE sur un fond sombre et restait parchemin, invisible sur le
+ * fond clair.
+ *
+ * Le canvas résout n'importe quelle notation (`rgb`, `oklab`, `color-mix`,
+ * `lab`…) sans qu'on ait à en connaître une seule.
+ */
+let probe = null;
+
+function toRgba(color) {
+  if (!color) return null;
+  if (!probe) {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 1;
+    probe = canvas.getContext("2d", { willReadFrequently: true });
+  }
+  probe.clearRect(0, 0, 1, 1);
+  probe.fillStyle = "#000";
+  probe.fillStyle = color; // ignoré si la couleur est invalide
+  probe.fillRect(0, 0, 1, 1);
+  const [r, g, b, a] = probe.getImageData(0, 0, 1, 1).data;
+  return { r, g, b, a: a / 255 };
+}
+
+/**
+ * Luminance perçue d'une couleur CSS, quelle que soit sa notation.
+ * Renvoie `null` si la couleur ne peint rien (trop transparente).
  */
 function luminanceOf(color) {
-  if (!color) return null;
+  const c = toRgba(color);
+  if (!c) return null;
 
-  const parts = color.match(/[\d.]+/g);
-  if (!parts || parts.length < 3) return null;
+  // un fond trop transparent ne peint pas : il faut continuer à remonter
+  if (c.a < 0.5) return null;
 
-  const [r, g, b] = parts.map(Number);
-  const alpha = parts.length > 3 ? Number(parts[3]) : 1;
-
-  // un fond transparent ne peint rien : il faut continuer à remonter l'arbre
-  if (alpha < 0.5) return null;
-
-  // pondération ITU-R BT.601 : suffisamment fidèle à l'œil, et sans le coût
-  // de la linéarisation sRGB pour un simple test clair/sombre
-  return (r * 299 + g * 587 + b * 114) / 255000;
+  // pondération ITU-R BT.601 : assez fidèle à l'œil pour un test clair/sombre
+  return (c.r * 299 + c.g * 587 + c.b * 114) / 255000;
 }
 
 /**
@@ -71,8 +110,13 @@ function isOnDarkBackdrop(startEl) {
     node = node.parentElement;
   }
 
-  // rien d'opaque trouvé : le <body> est ivoire, donc clair
-  return false;
+  /*
+    Rien d'opaque trouvé au-dessus : c'est le <body> qui peint, et son fond
+    suit `--ground`. On le lit donc plutôt que de supposer « clair » — le
+    site passe la moitié de son parcours dans le ciel.
+  */
+  const bodyLum = luminanceOf(getComputedStyle(document.body).backgroundColor);
+  return bodyLum !== null ? bodyLum < 0.5 : false;
 }
 
 export default function Cursor() {
@@ -167,6 +211,18 @@ export default function Cursor() {
       paint();
     };
 
+    /*
+      PEINTURE INITIALE.
+
+      `paint()` n'était appelé que sur un CHANGEMENT de fond. Au chargement,
+      le disque gardait donc la couleur posée par le style inline, quel que
+      soit le fond réel — et il restait faux tant qu'on ne traversait pas une
+      frontière. On lit donc l'état une première fois, tout de suite.
+    */
+    onDark = isOnDarkBackdrop(document.body);
+    setDark(onDark);
+    gsap.set(dot.current, { backgroundColor: onDark ? INK_ON_DARK : INK_ON_LIGHT });
+
     window.addEventListener("mousemove", onMove);
     document.addEventListener("mouseover", onOver);
     document.addEventListener("mouseout", onOut);
@@ -183,13 +239,22 @@ export default function Cursor() {
     <div
       ref={dot}
       aria-hidden="true"
-      className="pointer-events-none fixed left-0 top-0 z-[70] hidden h-3 w-3 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-bronze md:flex"
+      /*
+        Aucune couleur de fond en style inline : c'est l'effet qui la pose dès
+        le montage, en lisant le fond réel. Une valeur écrite ici resterait
+        celle du premier rendu et rendrait le disque faux tant qu'on n'aurait
+        pas franchi une bascule.
+      */
+      className="pointer-events-none fixed left-0 top-0 z-[70] hidden h-3 w-3 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full md:flex"
     >
       {label && (
         <span
-          className={`whitespace-nowrap font-mono text-[3.2px] uppercase tracking-[0.14em] ${
-            dark ? "text-charbon" : "text-ivoire"
-          }`}
+          /*
+            Le libellé est peint SUR le disque : sa couleur est donc celle du
+            fond que le disque recouvre, jamais celle du disque lui-même.
+          */
+          className="whitespace-nowrap font-mono text-[3.2px] uppercase tracking-[0.14em]"
+          style={{ color: dark ? palette.ciel : palette.clair }}
         >
           {label}
         </span>

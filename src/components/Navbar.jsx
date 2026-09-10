@@ -103,27 +103,37 @@ export default function Navbar() {
         className="fixed left-1/2 top-4 z-50 w-[calc(100%-6rem)] md:top-6 md:w-[calc(100%-2rem)]"
       >
         <div
-          className={`relative flex items-center justify-between rounded-full py-2 pl-4 pr-2 transition-all duration-500 ease-nova md:pl-6 ${
+          data-menu-open={open ? "true" : undefined}
+          className={`navbar-corps relative flex items-center justify-between rounded-full py-2 pl-4 pr-2 transition-all duration-500 ease-nova md:pl-6 ${
             solid
-              ? "bg-ivoire/85 shadow-[0_10px_40px_-18px_rgba(28,28,28,0.5)] backdrop-blur-md"
-              : "bg-ivoire/40 backdrop-blur-sm"
+              ? "navbar-pilule navbar-pilule--dense rule-ink border backdrop-blur-md"
+              : "navbar-pilule border border-transparent backdrop-blur-sm"
           }`}
         >
           <a
             href="#top"
             data-cursor="hover"
-            className="flex items-center gap-2 py-2 text-charbon"
-            aria-label="Nova Business, retour en haut"
+            className="ink flex items-center gap-2 py-2"
+            aria-label="NOVA, retour en haut"
           >
-            <svg viewBox="0 0 120 120" className="h-7 w-7" fill="none" aria-hidden="true">
-              <path d="M96 34a48 48 0 1 0 -6 62" stroke="#8A6045" strokeWidth="6" strokeLinecap="round" />
-              <path
-                d="M28 82c4-22 12-28 16-14s12 10 20-4 14-16 24-20"
-                stroke="#8A6045"
-                strokeWidth="7"
-                strokeLinecap="round"
-              />
-              <path d="M88 30l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" fill="#C9A86A" />
+            {/*
+              La marque est une ÉTOILE dessinée (§05 : « un point avec quatre
+              à six rayons dessinés »), au trait, en `currentColor` : elle
+              s'inverse donc avec le fond sans traitement particulier. Les
+              anciens tracés bronze/doré appartenaient à la palette d'avant.
+            */}
+            <svg
+              viewBox="0 0 24 24"
+              className="h-6 w-6"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              aria-hidden="true"
+            >
+              <line x1="12" y1="2" x2="12" y2="22" strokeWidth="1.1" />
+              <line x1="2" y1="12" x2="22" y2="12" strokeWidth="1.1" />
+              <line x1="5" y1="5" x2="19" y2="19" strokeWidth="0.7" />
+              <line x1="19" y1="5" x2="5" y2="19" strokeWidth="0.7" />
             </svg>
             <span className="text-[15px] font-extrabold uppercase tracking-tight">
               Nova
@@ -152,16 +162,16 @@ export default function Navbar() {
               aria-controls="menu-principal"
               aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
               data-cursor="hover"
-              className="group flex h-10 w-10 items-center justify-center rounded-full border border-charbon/15 transition-colors duration-300 hover:border-charbon/40"
+              className="rule-ink group flex h-10 w-10 items-center justify-center rounded-full border transition-colors duration-300"
             >
               <span className="relative block h-3 w-4">
                 <span
-                  className={`absolute left-0 block h-[1.5px] w-4 bg-charbon transition-all duration-300 ${
+                  className={`absolute left-0 block h-[1.5px] w-4 bg-[var(--ground-ink)] transition-all duration-300 ${
                     open ? "top-1.5 rotate-45" : "top-0"
                   }`}
                 />
                 <span
-                  className={`absolute left-0 block h-[1.5px] w-4 bg-charbon transition-all duration-300 ${
+                  className={`absolute left-0 block h-[1.5px] w-4 bg-[var(--ground-ink)] transition-all duration-300 ${
                     open ? "top-1.5 -rotate-45" : "top-3"
                   }`}
                 />
@@ -174,33 +184,83 @@ export default function Navbar() {
       <AnimatePresence>
         {open && (
           <>
-            {/* ---------------- MOBILE : carte compacte (inchangée) ---------------- */}
+            {/* ---------------- MOBILE : rideau plein écran ---------------- */}
+            {/*
+              Le panneau prend TOUT l'écran, comme sur ordinateur : une carte
+              compacte de 4 liens ne portait pas le même poids que le rideau,
+              et le téléphone se retrouvait avec une navigation au rabais.
+
+              Il porte aussi le CONTACT : le bouton « parlons-en » est masqué
+              sous 768 px pour que la pilule tienne, si bien qu'il n'existait
+              plus AUCUN chemin vers le contact depuis le téléphone.
+            */}
             <motion.div
               key="menu-mobile"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-              className="fixed inset-x-4 top-20 z-40 rounded-3xl bg-charbon p-6 text-ivoire md:hidden"
+              initial={{ clipPath: "inset(0 0 100% 0)" }}
+              animate={{ clipPath: "inset(0 0 0% 0)" }}
+              exit={{ clipPath: "inset(0 0 100% 0)" }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="fixed inset-0 z-40 flex flex-col bg-ciel text-contraste md:hidden"
             >
-              <ul className="flex flex-col gap-1">
-                {nav.map((item, i) => (
-                  <motion.li
-                    key={item.href}
-                    initial={{ opacity: 0, x: -12 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.06 * i + 0.1 }}
+              <div className="flex h-full flex-col justify-between px-5 pb-10 pt-28">
+                <nav aria-label="Sections du site">
+                  <ul className="flex flex-col">
+                    {nav.map((item, i) => (
+                      <motion.li
+                        key={item.href}
+                        initial={{ opacity: 0, y: 26 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 14, transition: { duration: 0.18 } }}
+                        transition={{
+                          duration: 0.6,
+                          delay: 0.12 + i * 0.07,
+                          ease: [0.16, 1, 0.3, 1],
+                        }}
+                        className="border-b border-contraste/10"
+                      >
+                        <a
+                          href={item.href}
+                          onClick={close}
+                          className="flex items-baseline gap-4 py-4"
+                        >
+                          <span className="font-mono text-[10px] tabular-nums text-contraste/35">
+                            0{i + 1}
+                          </span>
+                          <span className="font-display text-d3 font-black lowercase tracking-tight">
+                            {item.label}
+                          </span>
+                        </a>
+                      </motion.li>
+                    ))}
+                  </ul>
+                </nav>
+
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                  className="text-[13px] font-bold lowercase"
+                >
+                  <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.18em] text-contraste/45">
+                    Un projet
+                  </p>
+                  <a
+                    href={`mailto:${contact.email}`}
+                    onClick={close}
+                    className="link-underline block text-contraste"
                   >
-                    <a
-                      href={item.href}
-                      onClick={close}
-                      className="block border-b border-ivoire/10 py-3 text-2xl font-semibold lowercase tracking-tight"
-                    >
-                      {item.label}
-                    </a>
-                  </motion.li>
-                ))}
-              </ul>
+                    {contact.email}
+                  </a>
+                  <a
+                    href={`tel:${contact.phone.replace(/\s/g, "")}`}
+                    onClick={close}
+                    className="link-underline mt-1 block text-contraste/70"
+                  >
+                    {contact.phone}
+                  </a>
+                </motion.div>
+              </div>
             </motion.div>
 
             {/* ---------------- ORDINATEUR : rideau plein écran ---------------- */}
@@ -222,7 +282,7 @@ export default function Navbar() {
               animate={{ clipPath: "inset(0 0 0% 0)" }}
               exit={{ clipPath: "inset(0 0 100% 0)" }}
               transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-              className="fixed inset-0 z-40 hidden bg-charbon text-ivoire outline-none md:block"
+              className="fixed inset-0 z-40 hidden bg-ciel text-contraste outline-none md:block"
             >
               {/*
                 `pt-28` dégage la pilule flottante, qui reste au-dessus
@@ -242,7 +302,7 @@ export default function Navbar() {
                           delay: 0.1 + i * 0.07,
                           ease: [0.16, 1, 0.3, 1],
                         }}
-                        className="border-b border-ivoire/10"
+                        className="border-b border-contraste/10"
                       >
                         <a
                           href={item.href}
@@ -250,7 +310,7 @@ export default function Navbar() {
                           data-cursor="hover"
                           className="menu-row group flex items-baseline gap-6 py-5 lg:py-6"
                         >
-                          <span className="font-mono text-[11px] tabular-nums text-ivoire/35">
+                          <span className="font-mono text-[11px] tabular-nums text-contraste/35">
                             0{i + 1}
                           </span>
                           {/*
@@ -266,14 +326,21 @@ export default function Navbar() {
                             </span>
                             <span
                               aria-hidden="true"
-                              className="menu-label-bottom absolute inset-0 block text-d3 font-black lowercase tracking-tight text-dore"
+                              className="menu-label-bottom absolute inset-0 block text-d3 font-black lowercase tracking-tight text-clair"
                             >
                               {item.label}
                             </span>
                           </span>
-                          <span className="menu-arrow ml-auto self-center text-xl text-ivoire/40">
-                            ↗
-                          </span>
+                          {/*
+                            Plus de glyphe flèche : un TRAIT qui s'allonge au
+                            survol. C'est le langage de la planche gravée
+                            (§05, tout se joue au trait) et cela évite un
+                            caractère pictographique.
+                          */}
+                          <span
+                            aria-hidden="true"
+                            className="menu-arrow ml-auto h-px w-10 self-center bg-contraste/40"
+                          />
                         </a>
                       </motion.li>
                     ))}
@@ -291,13 +358,13 @@ export default function Navbar() {
                   transition={{ duration: 0.6, delay: 0.35 }}
                   className="flex flex-wrap items-end justify-between gap-6 text-[13px] font-bold lowercase"
                 >
-                  <div className="text-ivoire/45">
+                  <div className="text-contraste/45">
                     <p className="mb-2">contact</p>
                     <a
                       href={`mailto:${contact.email}`}
                       onClick={close}
                       data-cursor="hover"
-                      className="link-underline block text-ivoire"
+                      className="link-underline block text-contraste"
                     >
                       {contact.email}
                     </a>
@@ -305,7 +372,7 @@ export default function Navbar() {
                       href={`tel:${contact.phone.replace(/\s/g, "")}`}
                       onClick={close}
                       data-cursor="hover"
-                      className="link-underline mt-1 block text-ivoire"
+                      className="link-underline mt-1 block text-contraste"
                     >
                       {contact.phone}
                     </a>
@@ -318,7 +385,7 @@ export default function Navbar() {
                           href={social.href}
                           onClick={close}
                           data-cursor="hover"
-                          className="link-underline text-ivoire/70 transition-colors hover:text-ivoire"
+                          className="link-underline text-contraste/70 transition-colors hover:text-contraste"
                         >
                           {social.label}
                         </a>

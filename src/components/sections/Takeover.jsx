@@ -1,378 +1,197 @@
-import { useCallback, useEffect, useRef } from "react";
-
+import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import anime from "animejs/lib/anime.es.js";
 
-import { splitChars } from "../../lib/text";
-import LiquidVeil from "../LiquidVeil";
-import building from "../../assets/takeover/takeover1.svg";
-import flower from "../../assets/takeover/takeover2.svg";
-import centerArt from "../../assets/takeover/takeover3.svg";
-import SharedMedia from "../SharedMedia";
+import Engraving from "../Engraving";
+import taureau from "../../assets/plates/taureau-trait.png";
+import StarSky from "../StarSky";
+import Constellation from "../Constellation";
+import { splitCharsRich } from "../../lib/text";
+import { palette } from "../../lib/tokens";
+
+/** Mélange deux couleurs hex. `t` = 0 → `a`, 1 → `b`. */
+function mixHex(a, b, t) {
+  const parse = (h) => h.replace("#", "").match(/../g).map((x) => parseInt(x, 16));
+  const A = parse(a);
+  const B = parse(b);
+  return (
+    "#" +
+    A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, "0")).join("")
+  );
+}
+
 gsap.registerPlugin(ScrollTrigger);
 
-
-/* Fenêtre de progression du voile pendant laquelle le texte se révèle. */
-const REVEAL_START = 0.52;
-const REVEAL_END = 0.82;
-
+/**
+ * ÉTAT 2 — L'IMMERSION (§07)
+ * ============================================================================
+ *
+ * « Au scroll, le ciel monte et recouvre l'écran. Pleine couleur. C'est le
+ * point le plus profond de la page, et c'est là qu'a lieu l'embrasement. »
+ *
+ * L'ÉPINGLAGE SURVIT, SON CONTENU NON
+ * -----------------------------------
+ * La version précédente de cette section était une scène de 400vh avec des
+ * éclats d'images et un voile liquide. On garde l'épinglage — c'est le seul
+ * endroit du site avec assez de course pour que le ciel monte VRAIMENT — et
+ * on jette tout le reste.
+ *
+ * Ce qui reste épinglé : une phrase, et le récit du §02 énoncé en trois
+ * temps. Le fond fait le travail ; le contenu reste stable, comme l'exige
+ * le §03.
+ *
+ * L'EMBRASEMENT
+ * -------------
+ * Les lettres de « impossible à manquer » gagnent du contraste une à une,
+ * exactement comme le nom au chargement : de la couleur du fond vers le
+ * parchemin plein. Aucune lueur — le §05 est catégorique, et le §09 interdit
+ * le halo derrière un titre.
+ */
 export default function Takeover() {
   const root = useRef(null);
-  const textTimeline = useRef(null);
-
-  /** Synchronise la timeline de texte sur la progression de LiquidVeil. */
-  const updateText = useCallback((progress) => {
-    const tl = textTimeline.current;
-    if (!tl) return;
-
-    const t = (progress - REVEAL_START) / (REVEAL_END - REVEAL_START);
-    tl.seek(tl.duration * Math.min(1, Math.max(0, t)));
-  }, []);
 
   useEffect(() => {
-    if (!root.current) return undefined;
+    const el = root.current;
+    if (!el) return undefined;
 
     const ctx = gsap.context(() => {
-      const q = (sel) => root.current.querySelector(sel);
       const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-      const word = q("[data-word]");
-      const sub = q("[data-sub]");
-      const eyebrow = q("[data-eyebrow]");
-      const rule = q("[data-rule]");
-      const titleLayer = q("[data-title-layer]");
-      const descLayer = q("[data-desc-layer]");
-      const leftArt = q("[data-art-left]");
-      const rightArt = q("[data-art-right]");
-      const centerArtEl = q("[data-art-center]");
-
-      if (!word || !sub) return;
-
-      const chars = splitChars(word);
-
-      /* ------------------------------------------------------------------ */
-      /* ÉTAT INITIAL                                                        */
-      /* ------------------------------------------------------------------ */
-
-      gsap.set(chars, {
-        opacity: 0,
-        yPercent: 70,
-        rotate: 5,
-        transformOrigin: "50% 100%",
-      });
-      gsap.set(sub, { opacity: 0, y: 30 });
-      if (rule) gsap.set(rule, { scaleX: 0, transformOrigin: "0% 50%" });
-
-    
-      const SWING = window.matchMedia("(max-width: 767px)").matches ? 24 : 38;
-
-      if (titleLayer) gsap.set(titleLayer, { paddingTop: "38vh" });
-
-      if (descLayer) gsap.set(descLayer, { opacity: 0 });
-      if (leftArt) {
-        gsap.set(leftArt, { opacity: 0, rotate: -SWING, transformOrigin: "50% -140%" });
-      }
-      if (rightArt) {
-        gsap.set(rightArt, { opacity: 0, rotate: SWING, transformOrigin: "50% -140%" });
-      }
-
-      if (centerArtEl) {
-        gsap.set(centerArtEl, {
-          opacity: 0,
-          scale: 0.6,
-          rotate: -10,
-          transformOrigin: "50% 50%",
-        });
-      }
-
-      /* ------------------------------------------------------------------ */
-      /* MOUVEMENT RÉDUIT — tout est posé, rien ne bouge                     */
-      /* ------------------------------------------------------------------ */
+      const blaze = el.querySelector("[data-blaze]");
+      const chars = blaze ? splitCharsRich(blaze) : [];
 
       if (reduced) {
-        gsap.set(chars, { opacity: 1, yPercent: 0, rotate: 0 });
-        gsap.set(sub, { opacity: 1, y: 0 });
-        if (rule) gsap.set(rule, { scaleX: 1 });
-  
-        if (titleLayer) gsap.set(titleLayer, { paddingTop: "7vh" });
-        gsap.set(word, { scale: 0.3 });
-        if (descLayer) gsap.set(descLayer, { opacity: 1 });
-        [leftArt, rightArt, centerArtEl].forEach((el) => {
-          if (el) gsap.set(el, { rotate: 0, opacity: 1, scale: 1 });
-        });
+        gsap.set(chars, { color: palette.contraste });
         return;
       }
 
-      const timeline = anime.timeline({ autoplay: false, easing: "easeOutExpo" });
+      /*
+        Les lettres partent à la couleur du FOND : invisibles, présentes.
+        Elles ne se fondent pas depuis l'opacité 0 — elles émergent par le
+        contraste, ce qui est la mécanique même d'une nova (§02).
 
-      timeline.add({
-        targets: chars,
-        opacity: [0, 1],
-        translateY: ["70%", "0%"],
-        rotate: [5, 0],
-        duration: 1100,
-        delay: anime.stagger(55),
-      });
-
-      textTimeline.current = timeline;
-
-      /* ------------------------------------------------------------------ */
-      /* EYEBROW — apparaît à l'entrée dans la section                       */
-      /* ------------------------------------------------------------------ */
-
-      if (eyebrow) {
-        gsap.fromTo(
-          eyebrow,
-          { opacity: 0, y: -14 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 1,
-            ease: "expo.out",
-            scrollTrigger: { trigger: root.current, start: "top 70%" },
-          }
-        );
-      }
-
-
-      const relay = gsap.timeline({
-        scrollTrigger: {
-          trigger: root.current,
-          start: "top top",
-          end: "bottom bottom",
-          scrub: 1,
-        },
-      });
-
-      /* le titre respire pendant que la coulée le recouvre */
-      relay.fromTo(
-        word,
-        { scale: 1, y: 0 },
-        { scale: 1.04, y: -18, ease: "none", duration: 0.62 },
-        0
-      );
-
-      relay.to(
-        word,
-        { scale: 0.28, y: 0, ease: "power2.inOut", duration: 0.16 },
-        0.62
-      );
-
-      if (titleLayer) {
-        relay.to(
-          titleLayer,
-          { paddingTop: "7vh", ease: "power2.inOut", duration: 0.16 },
-          0.62
-        );
-      }
-
-      /* la couche description devient active dès que le titre libère le cadre */
-      if (descLayer) {
-        relay.to(descLayer, { opacity: 1, duration: 0.02 }, 0.66);
-      }
-
-      [
-        [leftArt, 0.66],
-        [rightArt, 0.68],
-      ].forEach(([el, at]) => {
-        if (!el) return;
-        relay.to(
-          el,
-          {
-            rotate: 0,
-            opacity: 1,
-            ease: "power3.out",
-            duration: 0.22,
+        On interpole entre deux couleurs RÉSOLUES : GSAP ne sait pas
+        interpoler `color-mix()` ni `var()`, le tween échouerait en silence.
+      */
+      gsap.fromTo(
+        chars,
+        { color: mixHex(palette.ciel, palette.contraste, 0.08) },
+        {
+          color: palette.contraste,
+          ease: "none",
+          stagger: 0.04,
+          scrollTrigger: {
+            trigger: el,
+            start: "top top",
+            end: "60% top",
+            scrub: 0.5,
           },
-          at
-        );
-      });
-
-
-      if (centerArtEl) {
-       
-        relay.to(
-          centerArtEl,
-          {
-            rotate: 0,
-            scale: 1,
-            opacity: 1,
-            ease: "back.out(1.6)",
-            duration: 0.3,
-          },
-          0.42
-        );
-      }
-
-      /* le filet se trace, puis le paragraphe monte */
-      if (rule) {
-        relay.to(rule, { scaleX: 1, ease: "expo.out", duration: 0.12 }, 0.72);
-      }
-
-      relay.to(
-        sub,
-        { opacity: 1, y: 0, ease: "expo.out", duration: 0.14 },
-        0.76
+        }
       );
+    }, el);
 
-    }, root);
-
-    return () => {
-      ctx.revert();
-      textTimeline.current = null;
-    };
+    return () => ctx.revert();
   }, []);
 
   return (
     <section
-      ref={root}
       id="studio"
-      data-flock
-      className="relative h-[400vh] bg-ivoire"
-      aria-label="Nova Business en un mot"
+      ref={root}
+      data-ground="ciel"
+      data-constellation-scope
+      className="relative h-[300vh]"
     >
-      {/* `h-stage` : 100vh avec repli 100svh — voir index.css */}
-      <div className="sticky top-0 h-stage ">
-        <LiquidVeil onProgress={updateText} />
+      {/*
+        Le panneau épinglé doit CONTENIR sa scène : sur mobile, texte et
+        constellation empilés dépassaient la hauteur d'écran et débordaient
+        sur la section suivante. On centre, on autorise le rétrécissement, et
+        on réserve la place de la barre flottante (`pt-24`).
+      */}
+      <div className="sticky top-0 flex h-stage overflow-hidden pb-6 pt-20 lg:items-center lg:py-0">
+        {/*
+          LE CIEL. Il n'est pas un décor posé derrière le texte : c'est le
+          fond du récit lui-même (§03), et il n'existe que là où le site est
+          dans le ciel. Voir `StarSky` pour l'exception du §09.
+        */}
+        <StarSky seed={11} className="text-contraste" />
+        {/*
+          SUR MOBILE : une colonne. Le texte garde sa taille naturelle en
+          haut, et la constellation occupe SIMPLEMENT CE QUI RESTE (`min-h-0`
+          + `flex-1`), au lieu d'imposer sa hauteur et de faire déborder le
+          panneau épinglé.
 
-        <p
-          data-eyebrow
-          className="
-            eyebrow absolute inset-x-0 top-0 z-20
-            px-5 text-center text-dore
-            pt-[calc(env(safe-area-inset-top)+4.5rem)]
-            md:px-10 md:pt-24 md:text-left
-            xl:px-16
-          "
-        >
-          Depuis 2019 — 40+ marques accompagnées
-        </p>
+          `min-h-0` est indispensable : sans lui, un enfant flex refuse de
+          se réduire sous sa taille de contenu, et tout le calcul échoue.
+        */}
+        <div className="edge flex h-full min-h-0 w-full flex-col justify-start gap-4 overflow-hidden lg:grid lg:h-auto lg:grid-cols-[1fr_auto] lg:items-center lg:gap-12">
+          <div className="max-w-2xl">
+            <p className="ink-40 mb-4 font-mono text-[11px] uppercase tracking-[0.2em] lg:mb-8">
+              Le récit
+            </p>
 
-        <div
-          data-title-layer
-          className="pointer-events-none absolute inset-0 z-10 flex items-start justify-center px-5 will-change-transform"
-        >
-          <h2
-            data-word
-            className="
-              origin-top text-center text-giant font-black lowercase
-              leading-[0.8] text-ivoire
-              [text-shadow:0_2px_60px_rgba(28,28,28,0.35)]
-              will-change-transform
-            "
-          >
-            nova.
-          </h2>
-        </div>
+            <p className="text-[26px] font-medium leading-[1.15] sm:text-d3">
+              Une nova n'est pas une étoile nouvelle.
+            </p>
 
-        <div
-          data-desc-layer
-          className="absolute inset-0 z-10 flex items-center will-change-transform"
-        >
-          {/* -------------- VISUEL GAUCHE (desktop uniquement) -------------- */}
+            {/*
+              Le paragraphe explicatif est réservé aux grands écrans : sur un
+              téléphone, la scène épinglée ne tient pas en une hauteur d'écran
+              une fois la barre flottante dégagée, et c'est CE bloc qui est le
+              plus redondant — le titre et l'embrasement disent déjà le récit.
+            */}
+            <p className="ink-60 mt-4 hidden max-w-lg text-[15px] leading-relaxed sm:block lg:mt-6 lg:text-[17px]">
+              C'est une étoile déjà présente, trop faible pour qu'on la
+              remarque, qui multiplie soudain son éclat. Rien n'est né, le ciel
+              n'a pas changé : elle vient de devenir visible.
+            </p>
 
-       <figure
-  data-art-left
-  aria-hidden="true"
-  className="
-    pointer-events-none absolute hidden origin-top will-change-transform
-    md:block ] md:top-[34%] md:w-[26vw] md:max-w-[240px] md:opacity-100
-     lg:max-w-[300px]
-     xl:max-w-[340px]
-  "
->
-  <SharedMedia src={building} alt="" loading="lazy" className="block w-full" />
-</figure>
+            {/*
+              L'EMBRASEMENT. Les lettres gagnent du contraste au défilement.
+              Le mot est écrit une seule fois — c'est un vrai titre, lu par
+              les lecteurs d'écran, pas un effet posé par-dessus.
+            */}
+            <p
+              data-blaze
+              className="mt-5 font-display text-[34px] font-black lowercase leading-[0.95] tracking-tight sm:text-d2 lg:mt-12"
+            >
+              impossible à manquer.
+            </p>
+          </div>
 
-{/* -------------- VISUEL DROIT (desktop uniquement) -------------- */}
+          {/*
+            BAYER, URANOMETRIA — LE TAUREAU (1603).
 
-<figure
-  data-art-right
-  aria-hidden="true"
-  className="
-    pointer-events-none absolute hidden origin-top will-change-transform
-    md:block md:-right-[4vw] md:top-[34%] md:w-[22vw] md:max-w-[220px] md:opacity-100
-    lg:-right-[5vw] lg:max-w-[270px]
-    xl:-right-[6vw] xl:max-w-[310px]
-  "
->
-  <SharedMedia src={flower} alt="" loading="lazy" className="block w-full" />
-</figure>
-          {/* -------------- VISUEL CENTRAL (mobile uniquement) -------------- */}
+            L'annexe A la désigne comme « déjà un système de design : un cadre,
+            une structure, un motif », et c'est la planche la plus graphique du
+            répertoire — monochrome, hachurée, les étoiles posées sur une
+            grille. Elle tient donc la place principale de l'immersion.
 
-          <figure
-            data-art-center
-            aria-hidden="true"
-            /*
-              MOBILE — le visuel était trop petit (52vw), calé à 40 % de la
-              hauteur donc À CHEVAL sur le paragraphe, et sa teinte bronze se
-              perdait sur le fond charbon.
+            Elle est traitée par `Engraving` : le papier crème disparaît et
+            seul le trait reste, en parchemin sur l'aubergine.
+          */}
+          {/*
+            LA CONSTELLATION prend la place principale : c'est le §02 joué
+            par le défilement, et le §11 demande que « personne d'autre que
+            NOVA ne pourrait produire ce récit ».
 
-              Il est désormais nettement plus grand, descendu SOUS le bloc de
-              texte, et remonté au-dessus du voile (`z-[15]`, entre la scène en
-              z-10 et l'eyebrow en z-20) pour être franchement lisible.
-
-              La largeur est bornée par `34vh` en plus de `70vw` : sur un écran
-              court (375 x 667) une taille purement horizontale débordait par
-              le bas.
-            */
-            className="
-              pointer-events-none absolute left-1/2 top-[64%] z-[15] block
-              w-[min(70vw,290px,30vh)] -translate-x-1/2 -translate-y-1/2
-              will-change-transform
-              drop-shadow-[0_24px_48px_rgba(0,0,0,0.55)]
-              md:hidden
-            "
-          >
-            <img
-              src={centerArt}
+            La planche de Bayer passe DERRIÈRE, très pâle : elle situe le
+            monde, la constellation raconte. L'annexe A dit d'ailleurs que
+            ces planches sont « des références de langage », pas le sujet.
+          */}
+          {/*
+            SUR MOBILE la constellation n'est PAS masquée : c'est la pièce
+            centrale du site, et la cacher revenait à priver le téléphone du
+            récit. Elle passe simplement sous le texte, pleine largeur.
+          */}
+          <div className="relative mx-auto min-h-0 w-full max-w-sm flex-1 lg:mx-0 lg:w-[34vw] lg:max-w-lg lg:flex-none">
+            <Engraving
+              src={taureau}
+              ratio="4/5"
+              parallax={5}
+              warp="scroll"
               alt=""
-              loading="lazy"
-              className="block w-full"
+              className="constellation-fond pointer-events-none absolute opacity-[0.09]"
             />
-          </figure>
-
-          {/* ---------------- TEXTE ---------------- */}
-          {/*
-            Aligné à droite comme dans la référence, mais gardé à l'intérieur
-            de la gouttière pour ne jamais passer sous le visuel de droite.
-          */}
-
-          {/*
-            Le titre replié occupe désormais le haut du cadre en permanence :
-            la description est décalée vers le bas pour lui laisser la place au
-            lieu de passer dessous. Sur mobile le retrait est plus important —
-            le mot y est proportionnellement plus grand.
-          */}
-          <div
-            className="
-              relative z-10 w-full self-start px-6
-              pt-[calc(env(safe-area-inset-top)+13rem)]
-              md:ml-auto md:px-10 md:pt-[26vh]
-              xl:px-16
-            "
-          >
-            <div className="w-full max-w-[520px] md:ml-auto md:mr-[16vw] lg:mr-[18vw] xl:mr-[15vw]">
-              <span
-                data-rule
-                aria-hidden="true"
-                className="mb-5 block h-px w-full bg-dore/50 md:mb-6"
-              />
-              <p
-                data-sub
-                className="
-                  text-left text-[19px] font-medium leading-[1.5]
-                  tracking-[-0.01em] text-ivoire/80
-                  sm:text-xl
-                  md:text-2xl md:leading-[1.55] md:text-ivoire/75
-                "
-              >
-                Nous créons des expériences digitales où design, technologie et
-                stratégie se rencontrent pour donner aux marques une présence
-                forte, distinctive et mémorable.
-              </p>
-            </div>
+            <Constellation className="relative w-full text-contraste" />
           </div>
         </div>
       </div>

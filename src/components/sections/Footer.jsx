@@ -1,12 +1,41 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { contact } from "../../data/site";
+import { contact, nav } from "../../data/site";
 import { splitChars } from "../../lib/text";
-import logo from "../../assets/Logo.jpg"
+import StarSky from "../StarSky";
+import Engraving from "../Engraving";
+import scorpion from "../../assets/plates/scorpion-trait.png";
+
 gsap.registerPlugin(ScrollTrigger);
 
-
+/**
+ * ÉTAT 4 — LE PIED DE PAGE (§07)
+ * ============================================================================
+ *
+ * « Fond clair, puis bascule en pleine couleur au tout dernier moment. La
+ * boucle se referme sur l'écran de chargement. »
+ *
+ * La bascule n'est PAS pilotée ici : le pied de page déclare simplement
+ * `data-ground="ciel"`, et `src/lib/ground.js` en déduit la frontière avec la
+ * section claire qui le précède. C'est la troisième et dernière bascule de la
+ * page, et elle ramène exactement la couleur de l'étape 0.
+ *
+ * CE QUI A DISPARU
+ * ----------------
+ * La version précédente empilait ici ~340 lignes de CSS décoratif : aurore de
+ * voiles dorés en rotation, grille lumineuse montante, balayage doré sur le
+ * nom, `drop-shadow` de lueur sur les lettres survolées, halo du logo, point
+ * lumineux voyageant le long du filet, flèche qui saute en boucle. Le §09
+ * interdit chacun de ces motifs — lueurs, dégradés décoratifs, animations en
+ * boucle — et le §05 exige qu'un dessin tienne au trait seul.
+ *
+ * CE QUI RESTE
+ * ------------
+ * Le nom géant, ajusté À LA LARGEUR RÉELLE par mesure (et non par une valeur
+ * en `vw` devinée), et le magnétisme des lettres — un mouvement qui répond au
+ * geste de l'utilisateur, donc ni une boucle ni un clignotement.
+ */
 export default function Footer() {
   const root = useRef(null);
   const wordmark = useRef(null);
@@ -22,10 +51,9 @@ export default function Footer() {
 
       if (!chars.length) return;
 
-      if (reduced) {
-        gsap.set(chars, { yPercent: 0, opacity: 1 });
-        return;
-      }
+      /* ------------------------------------------------------------------ */
+      /* 1. ARRIVÉE DES LETTRES                                              */
+      /* ------------------------------------------------------------------ */
 
       /*
         `fromTo` et NON `set(...)` + `to(...)` : avec deux appels séparés,
@@ -33,37 +61,28 @@ export default function Footer() {
         lorsque celui-ci est créé alors que le déclencheur est déjà franchi —
         les lettres restent alors bloquées en position basse.
 
-        Le déclencheur vise le NOM lui-même et non le footer entier : ce
+        Le déclencheur vise le NOM lui-même et non le pied de page entier : ce
         dernier est très haut, son sommet franchirait le seuil bien avant que
         le mot n'entre à l'écran.
       */
-      gsap.fromTo(
-        chars,
-        { yPercent: 110, opacity: 0 },
-        {
-          yPercent: 0,
-          opacity: 1,
-          duration: 1.1,
-          ease: "expo.out",
-          stagger: 0.03,
-          immediateRender: true,
-          /*
-            `top bottom` et non `top 95%` : le pied de page fait toute la
-            hauteur de l'écran, et sur mobile le nom se retrouve DÉJÀ au-dessus
-            de la ligne des 95 % quand on arrive en bas de page — le
-            déclencheur n'était jamais franchi et les lettres restaient
-            invisibles. Avec `top bottom` il suffit que le mot entre par le bas
-            de la fenêtre.
-          */
-          scrollTrigger: {
-            trigger: wordmark.current,
-            start: "top bottom",
-            once: true,
-          },
-        }
-      );
+      if (!reduced) {
+        gsap.fromTo(
+          chars,
+          { yPercent: 110, opacity: 0 },
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1.1,
+            ease: "expo.out",
+            stagger: 0.03,
+            immediateRender: true,
+            scrollTrigger: { trigger: wordmark.current, start: "top bottom", once: true },
+          }
+        );
+      }
+
       /* ------------------------------------------------------------------ */
-      /* 3. AJUSTEMENT DU NOM À LA LARGEUR                                   */
+      /* 2. AJUSTEMENT DU NOM À LA LARGEUR                                   */
       /* ------------------------------------------------------------------ */
 
       /*
@@ -77,10 +96,9 @@ export default function Footer() {
         if (!node || !node.parentElement) return;
 
         /*
-          Largeur RÉELLEMENT disponible pour le texte : `clientWidth` du parent
-          inclut son rembourrage, que les lettres ne peuvent pas occuper. On le
-          retranche, sans quoi le mot dépasse systématiquement d'environ 5 à
-          10 %.
+          Largeur RÉELLEMENT disponible : `clientWidth` du parent inclut son
+          rembourrage, que les lettres ne peuvent pas occuper. On le retranche,
+          sans quoi le mot dépasse systématiquement de 5 à 10 %.
         */
         const parent = node.parentElement;
         const pcs = getComputedStyle(parent);
@@ -91,13 +109,10 @@ export default function Footer() {
         if (!available || available <= 0) return;
 
         /*
-          On mesure l'ENCRE réelle (du bord gauche de la 1re lettre au bord
-          droit de la dernière) et non `scrollWidth` : `splitChars` a déjà
-          emballé chaque caractère dans un span inline-block, et la largeur de
-          défilement du conteneur ne reflète alors plus celle du texte.
-
-          Les lettres sont translatées verticalement pendant l'animation, ce
-          qui ne change pas leur position horizontale : la mesure reste juste.
+          On mesure l'ENCRE réelle (bord gauche de la 1re lettre au bord droit
+          de la dernière) et non `scrollWidth` : chaque caractère est déjà
+          emballé dans un span inline-block, et la largeur de défilement du
+          conteneur ne reflète alors plus celle du texte.
         */
         const glyphs = node.querySelectorAll(".char");
         const REF = 100;
@@ -124,132 +139,58 @@ export default function Footer() {
       window.addEventListener("resize", fitWordmark);
 
       /* ------------------------------------------------------------------ */
-      /* 4. MAGNÉTISME DES LETTRES                                           */
+      /* 3. MAGNÉTISME DES LETTRES                                           */
       /* ------------------------------------------------------------------ */
 
-      /*
-       * Les lettres proches du curseur se soulèvent et s'éclairent, avec une
-       * décroissance douce selon la distance — le mot « respire » sous la
-       * souris au lieu de réagir lettre par lettre.
-       *
-       * Un seul écouteur posé sur le NOM (et non un par caractère) : il y a
-       * une quinzaine de spans, et `pointermove` par lettre multiplierait les
-       * appels sans rien apporter.
-       *
-       * `quickTo` plutôt que `gsap.to` : il réutilise le même tween pour
-       * chaque lettre au lieu d'en créer un par déplacement du curseur, ce
-       * qui reste fluide même à 120 Hz.
-       */
       const wordNode = wordmark.current;
-      const setters = chars.map((char) => ({
-        char,
-        y: gsap.quickTo(char, "y", { duration: 0.5, ease: "power3.out" }),
-        scale: gsap.quickTo(char, "scale", { duration: 0.5, ease: "power3.out" }),
-      }));
-
-      // rayon d'influence : au-delà, la lettre est au repos
-      const RADIUS = 190;
-
-      const onPointerMove = (event) => {
-        setters.forEach(({ char, y, scale }) => {
-          const rect = char.getBoundingClientRect();
-          const cx = rect.left + rect.width / 2;
-          const cy = rect.top + rect.height / 2;
-          const distance = Math.hypot(event.clientX - cx, event.clientY - cy);
-          // 0 au bord du rayon, 1 sous le curseur
-          const force = Math.max(0, 1 - distance / RADIUS);
-          y(-38 * force);
-          scale(1 + 0.14 * force);
-          char.classList.toggle("is-lit", force > 0.12);
-        });
-      };
-
-      const onPointerLeave = () => {
-        setters.forEach(({ char, y, scale }) => {
-          y(0);
-          scale(1);
-          char.classList.remove("is-lit");
-        });
-      };
-
-      /*
-       * `(hover: hover)` : sur un écran tactile un `pointermove` isolé
-       * laisserait les lettres soulevées sans jamais recevoir de « leave ».
-       */
       const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-      if (finePointer) {
+      let onPointerMove;
+      let onPointerLeave;
+
+      if (finePointer && !reduced) {
+        /*
+          `quickTo` plutôt que `gsap.to` : il réutilise le même tween pour
+          chaque lettre au lieu d'en créer un par déplacement du curseur, ce
+          qui reste fluide même à 120 Hz. Un seul écouteur sur le NOM, pas un
+          par caractère.
+        */
+        const setters = chars.map((char) => ({
+          char,
+          y: gsap.quickTo(char, "y", { duration: 0.5, ease: "power3.out" }),
+          scale: gsap.quickTo(char, "scale", { duration: 0.5, ease: "power3.out" }),
+        }));
+
+        // rayon d'influence : au-delà, la lettre est au repos
+        const RADIUS = 190;
+
+        onPointerMove = (event) => {
+          setters.forEach(({ char, y, scale }) => {
+            const rect = char.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            const distance = Math.hypot(event.clientX - cx, event.clientY - cy);
+            // 0 au bord du rayon, 1 sous le curseur
+            const force = Math.max(0, 1 - distance / RADIUS);
+            y(-38 * force);
+            scale(1 + 0.14 * force);
+          });
+        };
+
+        onPointerLeave = () => {
+          setters.forEach(({ y, scale }) => {
+            y(0);
+            scale(1);
+          });
+        };
+
         wordNode.addEventListener("pointermove", onPointerMove);
         wordNode.addEventListener("pointerleave", onPointerLeave);
       }
 
-      /* ------------------------------------------------------------------ */
-      /* 5. INVERSION DES COULEURS À L'ENTRÉE                                */
-      /* ------------------------------------------------------------------ */
-
-      /*
-       * Le pied de page se présente en négatif (fond ivoire, encre bronze)
-       * puis rejoint ses couleurs normales à mesure qu'il monte à l'écran.
-       *
-       * On anime UNE variable, `--f-mix` (0 = inversé, 1 = normal) : la
-       * feuille de styles en dérive le fond, l'encre, les bordures et les
-       * butées du dégradé du nom. Animer les couleurs une par une depuis JS
-       * imposerait de connaître ici chaque élément du bloc.
-       *
-       * `end: "top center"` : la bascule est CONSOMMÉE dès que le haut du
-       * pied de page atteint le milieu de l'écran. Elle sert d'entrée en
-       * matière ; la prolonger jusqu'en bas laisserait le bloc à demi
-       * inversé pendant toute sa lecture.
-       */
-      const invert = gsap.fromTo(
-        root.current,
-        { "--f-mix": 0, "--f-inv": 1 },
-        {
-          "--f-mix": 1,
-          "--f-inv": 0,
-          ease: "none",
-          scrollTrigger: {
-            trigger: root.current,
-            start: "top bottom",
-            end: "top center",
-            scrub: 0.8,
-          },
-        }
-      );
-
-      /* ------------------------------------------------------------------ */
-      /* 6. PARALLAXE DU NOM                                                 */
-      /* ------------------------------------------------------------------ */
-
-      /*
-       * Le nom monte légèrement pendant que le pied de page défile : le bloc
-       * gagne de la profondeur sans qu'aucun élément ne change de place au
-       * repos (le décalage revient à zéro à mi-parcours).
-       */
-      const parallax = gsap.fromTo(
-        wordNode,
-        { yPercent: 6 },
-        {
-          yPercent: -4,
-          ease: "none",
-          scrollTrigger: {
-            trigger: root.current,
-            start: "top bottom",
-            end: "bottom bottom",
-            scrub: 0.6,
-          },
-        }
-      );
-
       cleanup = () => {
         window.removeEventListener("resize", fitWordmark);
-        if (finePointer) {
-          wordNode.removeEventListener("pointermove", onPointerMove);
-          wordNode.removeEventListener("pointerleave", onPointerLeave);
-        }
-        parallax.scrollTrigger?.kill();
-        parallax.kill();
-        invert.scrollTrigger?.kill();
-        invert.kill();
+        if (onPointerMove) wordNode.removeEventListener("pointermove", onPointerMove);
+        if (onPointerLeave) wordNode.removeEventListener("pointerleave", onPointerLeave);
       };
     }, root);
 
@@ -265,57 +206,59 @@ export default function Footer() {
     <footer
       ref={root}
       id="contact"
-      className="footer-invert footer-aurora relative flex flex-col overflow-hidden px-5 py-10 md:px-10 md:py-12"
+      data-ground="ciel"
+      className="relative flex flex-col overflow-hidden px-5 py-16 md:px-10 md:py-20"
     >
-      {/* ---------------- HAUT : logo + actions ---------------- */}
-      <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
-        {/*
-          Le logo fourni est un JPEG (fond ivoire, pas de transparence) : posé
-          tel quel sur le bronze il afficherait un rectangle blanc. On l'assume
-          donc comme une CARTE ivoire — c'est net et volontaire, là où un
-          détourage approximatif se verrait.
-        */}
-        <a
-          href="#top"
-          data-cursor="hover"
-          aria-label="Nova Business, retour en haut"
-          className="footer-logo inline-block w-fit rounded-[4px] bg-ivoire p-3 ease-nova hover:-translate-y-0.5 md:p-4"
-        >
-          <img
-            src={logo}
-            alt="Nova Business"
-            className="block h-9 w-auto md:h-12"
-          />
-        </a>
+      {/* le ciel du footer referme la boucle ouverte au chargement */}
+      <StarSky seed={47} className="text-contraste" />
 
-        <div className="flex flex-col gap-3 sm:flex-row md:items-center">
-          <a
-            href="#realisations"
-            data-cursor="hover"
-            className="footer-shine rounded-full border border-ivoire/70 px-7 py-3 text-center text-[13px] font-bold lowercase transition-colors duration-500 ease-nova hover:border-ivoire hover:bg-ivoire hover:text-bronze"
-          >
-            nos réalisations
-          </a>
+      {/*
+        Une dernière planche dans le ciel de clôture, très pâle : elle ferme
+        le monde comme elle l'avait ouvert dans l'immersion.
+      */}
+      <Engraving
+        src={scorpion}
+        ratio="1/1"
+        parallax={5}
+        warp="normal"
+        alt=""
+        className="engraving-marge-gauche pointer-events-none absolute opacity-[0.10]"
+      />
+      <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
+        <div>
+          <p className="ink-40 mb-4 font-mono text-[11px] uppercase tracking-[0.18em]">
+            Un projet
+          </p>
+          {/*
+            Plus de gélules : deux liens texte. Le §09 range le bouton en
+            capsule contournée parmi les signatures de sites générés.
+          */}
           <a
             href={`mailto:${contact.email}`}
             data-cursor="hover"
-            className="footer-shine footer-shine-dark rounded-full bg-ivoire px-7 py-3 text-center text-[13px] font-bold lowercase text-bronze transition-colors duration-500 ease-nova hover:bg-blanc"
+            className="link-underline text-d3 font-medium lowercase"
           >
-            parlons-en
+            {contact.email}
           </a>
         </div>
+
+        <nav aria-label="Pied de page" className="flex flex-col gap-3">
+          {nav.map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              data-cursor="hover"
+              className="link-underline w-fit text-[13px] font-bold lowercase"
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
       </div>
 
-      {/* ---------------- COORDONNÉES ---------------- */}
-      {/*
-        La hauteur du pied de page est dictée par son CONTENU (pas de
-        `min-h-[100svh]`) : sur grand écran cela évitait un large vide au
-        milieu, le bloc était étiré pour rien. Les espacements fixes donnent un
-        rythme régulier d'un écran à l'autre.
-      */}
       <div className="grid gap-8 pt-24 text-[13px] font-bold lowercase leading-relaxed sm:grid-cols-2 md:pt-32">
         <div>
-          <p className="mb-4 text-ivoire/55">adresse</p>
+          <p className="ink-40 mb-4">adresse</p>
           <address className="not-italic">
             {contact.address.map((line) => (
               <span key={line} className="block">
@@ -326,59 +269,40 @@ export default function Footer() {
         </div>
 
         <div className="sm:justify-self-end sm:text-right">
-          <p className="mb-4 text-ivoire/55">contact</p>
-          {/* `py-2` : porte la cible tactile à ~40 px sans changer le rythme visuel */}
+          <p className="ink-40 mb-4">contact</p>
+          {/* `py-3` : porte la cible tactile à ~40 px sans changer le rythme */}
           <a
             href={`tel:${contact.phone.replace(/\s/g, "")}`}
             data-cursor="hover"
-            className="footer-link footer-link-right block py-3 transition-opacity duration-500 hover:opacity-70"
+            className="link-underline block py-3"
           >
             {contact.phone}
-          </a>
-          <a
-            href={`mailto:${contact.email}`}
-            data-cursor="hover"
-            className="footer-link footer-link-right block py-3 transition-opacity duration-500 hover:opacity-70"
-          >
-            {contact.email}
           </a>
         </div>
       </div>
 
-      {/* ---------------- NOM GÉANT ---------------- */}
       {/*
-        Le nom est la pièce maîtresse : gras plein (`font-black`), interlettrage
-        resserré et taille calée sur la LARGEUR de l'écran pour qu'il remplisse
-        la ligne d'un bord à l'autre.
-
-        `min(…vw, …rem)` plutôt que `clamp()` : au-delà d'un très grand écran on
-        plafonne, mais en dessous le mot suit fidèlement la largeur — il n'y a
-        jamais de « trou » à droite.
+        LE NOM GÉANT.
+        Taille mesurée en JS (voir §2 de l'effet) et non fixée en `vw` : la
+        marge latérale change selon le point de rupture, donc une échelle en
+        `vw` qui tenait sur mobile débordait sur tablette.
       */}
       <h2
         ref={wordmark}
-        aria-label="Nova Business"
-        /*
-          La taille est mesurée en JS (voir §3 de l'effet) et non fixée en
-          `vw` : la marge latérale change selon le point de rupture, donc une
-          échelle en `vw` qui tenait sur mobile débordait sur tablette. On part
-          de la largeur RÉELLE du conteneur, le mot remplit toujours la ligne
-          au pixel près.
-        */
-        className="footer-wordmark mt-10 w-full whitespace-nowrap pb-[0.04em] font-black leading-[0.78] tracking-[-0.045em]"
+        aria-label="NOVA"
+        className="mt-16 w-full whitespace-nowrap pb-[0.04em] font-display font-black leading-[0.78] tracking-[-0.045em]"
       >
-        nova business.
+        nova.
       </h2>
 
-      {/* ---------------- BARRE DE BAS DE PAGE ---------------- */}
-      <div className="footer-rule mt-6 flex items-center justify-between border-t border-ivoire/20 pt-5 text-[12px] font-bold lowercase text-ivoire/70">
-        <span>@nova {year}</span>
+      <div className="rule-ink mt-6 flex items-center justify-between border-t pt-5 text-[12px] font-bold lowercase">
+        <span className="ink-40">© nova {year}</span>
         <a
           href="#top"
           data-cursor="hover"
-          className="footer-top -my-3 py-3 transition-opacity duration-500 hover:text-ivoire hover:opacity-100"
+          className="link-underline -my-3 py-3"
         >
-          retour en haut <span className="footer-top-arrow">↑</span>
+          retour en haut
         </a>
       </div>
     </footer>

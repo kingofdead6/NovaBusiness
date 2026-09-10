@@ -54,21 +54,10 @@ export default function TypedHeading({
     }
 
     /*
-      On fige la hauteur du titre à partir du fantôme rendu à sa taille
-      définitive. Sans ça la page bouge à chaque retour à la ligne gagné
-      par le texte qui s'allonge ou disparaît.
+      Aucune hauteur à figer : c'est le fantôme, resté dans le flux, qui
+      donne sa taille au bloc (voir `.typed-ghost` dans la feuille de
+      styles). Le texte frappé est superposé en `absolute`.
     */
-    const lockHeight = () => {
-      const ghost = slotEl.querySelector(".typed-ghost");
-      if (!ghost) return;
-      ghost.style.height = "auto";
-      const h = ghost.getBoundingClientRect().height;
-      ghost.style.height = "";
-      if (h) slotEl.style.minHeight = `${h}px`;
-    };
-
-    lockHeight();
-    window.addEventListener("resize", lockHeight);
 
     let typed;
 
@@ -112,7 +101,6 @@ export default function TypedHeading({
     io.observe(slotEl);
 
     return () => {
-      window.removeEventListener("resize", lockHeight);
       io.disconnect();
       typed?.destroy();
     };

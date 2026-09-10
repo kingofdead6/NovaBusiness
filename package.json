@@ -6,10 +6,18 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "verify:palette": "node tests/check-palette.mjs",
+    "verify:bans": "node tests/check-bans.mjs",
+    "verify:contrast": "node tests/check-contrast.mjs",
+    "verify:ground": "node tests/check-ground.mjs",
+    "verify": "npm run verify:palette && npm run verify:bans && npm run verify:contrast && npm run verify:ground && npm run verify:cursor && npm run verify:recit && npm run verify:typed && npm run verify:mobile",
+    "verify:cursor": "node tests/check-cursor.mjs",
+    "verify:recit": "node tests/check-constellation.mjs",
+    "verify:typed": "node tests/check-typed.mjs",
+    "verify:mobile": "node tests/check-mobile.mjs"
   },
   "dependencies": {
-    "animejs": "3.2.2",
     "framer-motion": "^11.3.0",
     "gsap": "^3.12.5",
     "lenis": "^1.1.13",
